@@ -38,6 +38,10 @@ import java.util.*;
  * @author Mohammad Goudarzi
  */
 public class TranslationServiceFog_RandomMobility {
+
+    // TODO: Take a look of this input/output metrics to compare algorithms.
+
+    // Timing: when request comes.
     static List<FogDevice> fogDevices = new ArrayList<FogDevice>();
     static List<Sensor> sensors = new ArrayList<Sensor>();
     static List<Actuator> actuators = new ArrayList<Actuator>();
@@ -207,7 +211,6 @@ public class TranslationServiceFog_RandomMobility {
      * @param ram         RAM
      * @param upBw        uplink bandwidth
      * @param downBw      downlink bandwidth
-     * @param level       hierarchy level of the device
      * @param ratePerMips cost rate per MIPS used
      * @param busyPower
      * @param idlePower
