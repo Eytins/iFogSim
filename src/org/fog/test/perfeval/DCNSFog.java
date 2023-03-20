@@ -70,6 +70,7 @@ public class DCNSFog {
             Controller controller = null;
 
             ModuleMapping moduleMapping = ModuleMapping.createModuleMapping(); // initializing a module mapping
+            // Module (Service) is placed in devices here. It checked the name of the device, then put it.
             for (FogDevice device : fogDevices) {
                 if (device.getName().startsWith("m")) { // names of all Smart Cameras start with 'm'
                     moduleMapping.addModuleToDevice("motion_detector", device.getName());  // fixing 1 instance of the Motion Detector module to each Smart Camera
