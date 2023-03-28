@@ -51,6 +51,7 @@ public class TranslationServiceFog_RandomMobility {
     static boolean CLOUD = false;
 
     static double SENSOR_TRANSMISSION_TIME = 10;
+    // Input: obvious
     static int numberOfMobileUser = 1;
 
     // if random mobility generator for users is True, new random dataset will be created for each user
@@ -63,8 +64,10 @@ public class TranslationServiceFog_RandomMobility {
 
         try {
             Log.disable();
+            // Input
             int num_user = 1; // number of cloud users
             Calendar calendar = Calendar.getInstance();
+            // Input: if CloudSim trace need to be written
             boolean trace_flag = false; // mean trace events
 
             CloudSim.init(num_user, calendar, trace_flag);
@@ -192,13 +195,23 @@ public class TranslationServiceFog_RandomMobility {
         FogDevice mobile = createFogDevice(name, 500, 20, 1000, 270, 0, 87.53, 82.44);
         mobile.setParentId(parentId);
         //locator.setInitialLocation(name,drone.getId());
+
+        // Input(SENSOR_TRANSMISSION_TIME): Sends an event/message (from sensor) to another entity by delaying the simulation time from the current time, with a tag representing the event type.
+        // This param controls the delay of sending this event/message
+        // But still not completely understand:
+        // what is sensor's role in this network?
+        // Is that an end device?
+        // Why the delay would happen?
+        // Who triggered this sending task?
         Sensor mobileSensor = new Sensor("sensor-" + name, "M-SENSOR", userId, appId, new DeterministicDistribution(SENSOR_TRANSMISSION_TIME)); // inter-transmission time of EEG sensor follows a deterministic distribution
         sensors.add(mobileSensor);
         Actuator mobileDisplay = new Actuator("actuator-" + name, userId, appId, "M-DISPLAY");
         actuators.add(mobileDisplay);
         mobileSensor.setGatewayDeviceId(mobile.getId());
+        // Input
         mobileSensor.setLatency(6.0);  // latency of connection between EEG sensors and the parent Smartphone is 6 ms
         mobileDisplay.setGatewayDeviceId(mobile.getId());
+        // Input
         mobileDisplay.setLatency(1.0);  // latency of connection between Display actuator and the parent Smartphone is 1 ms
         return mobile;
     }

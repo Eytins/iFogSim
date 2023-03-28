@@ -49,6 +49,7 @@ public class MobilityController extends SimEntity{
 		setLocator(locator);
 		setAppLaunchDelays(new HashMap<String, Integer>());
 		setParentReference(new HashMap<Integer, Integer>());
+		// TODO: This is where to set the placement algorithm.
 		setAppModulePlacementPolicy(new HashMap<String, ModulePlacement>());
 		for(FogDevice fogDevice : fogDevices){
 			fogDevice.setControllerId(getId());
