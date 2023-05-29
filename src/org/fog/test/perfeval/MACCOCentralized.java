@@ -14,9 +14,9 @@ import org.fog.application.AppLoop;
 import org.fog.application.Application;
 import org.fog.application.selectivity.FractionalSelectivity;
 import org.fog.entities.*;
-import org.fog.placement.Controller;
-import org.fog.placement.ModulePlacementEdgewards;
-import org.fog.placement.ModulePlacementMapping;
+import org.fog.mobilitydata.DataParser;
+import org.fog.mobilitydata.References;
+import org.fog.placement.*;
 import org.fog.policy.AppModuleAllocationPolicy;
 import org.fog.scheduler.StreamOperatorScheduler;
 import org.fog.utils.FogLinearPowerModel;
@@ -24,6 +24,7 @@ import org.fog.utils.FogUtils;
 import org.fog.utils.TimeKeeper;
 import org.fog.utils.distribution.DeterministicDistribution;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -33,18 +34,124 @@ import java.util.*;
  * How to run?
  * Make it work
  */
-public class TestFog {
-    static int numOfFogDevices = 10;
-
+public class MACCOCentralized {
     static List<FogDevice> fogDevices = new ArrayList<>();
 
     static Map<String, Integer> getIdByName = new HashMap<>();
+
+    static List<Sensor> sensors = new ArrayList<Sensor>();
+
+    static List<Actuator> actuators = new ArrayList<Actuator>();
+
+    static LocationHandler locator;
+
+    static Map<Integer, Integer> userMobilityPattern = new HashMap<Integer, Integer>();
+
+    static final int NUM_OF_FOG_DEVICES = 10;
+
+    static final String DATASET_REFERENCE = References.dataset_reference;
+
+    static final int CLOUD_USER_NUM = 1;
+
+    static final boolean TRACE_FLAG = false;
+
+    static final String APP_ID = "MACCO_Service_Placement";
+
+    static final double SENSOR_TRANSMISSION_TIME = 10;
+
+    static final boolean CLOUD = false;
+
+    static final int NUMBER_OF_MOBILE_USER = 1;
+
+    public static void main(String[] args) {
+        Log.printLine("Starting Centralized MAACO");
+        try {
+            Log.disable();
+            // What this is used for?
+            Calendar calendar = Calendar.getInstance();
+            CloudSim.init(CLOUD_USER_NUM, calendar, TRACE_FLAG);
+            FogBroker broker = new FogBroker("broker");
+            Application application = createApplication(APP_ID, broker.getId());
+            application.setUserId(broker.getId());
+
+            DataParser dataObject = new DataParser();
+            locator = new LocationHandler(dataObject);
+
+            // TODO: Create mobility Datasets/Pattern
+            // TODO: Define Service placement pattern
+            createFogDevices();
+            createMobileUser(broker.getId(), APP_ID, DATASET_REFERENCE);
+            createFogDevices();
+
+            ModuleMapping moduleMapping = ModuleMapping.createModuleMapping();
+
+            for (FogDevice device : fogDevices) {
+                if (device.getName().startsWith("one")) {
+                    moduleMapping.addModuleToDevice("service_one", device.getName());
+                }
+            }
+            Controller controller = new Controller("master_controller", fogDevices, sensors, actuators);
+            controller.submitApplication(application, new ModulePlacementMobileEdgewards(fogDevices, sensors, actuators, application, moduleMapping));
+
+            TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
+            CloudSim.startSimulation();
+            CloudSim.stopSimulation();
+            Log.printLine("Translation Service finished!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.printLine("Unwanted error happened");
+        }
+        // *Network stuff
+        // Subneting
+        // Firewall
+        // Oracle/ vodafone/ mastercard job ID
+    }
+
+    private static void createMobileUser(int userId, String appId, String datasetReference) throws IOException {
+        // TODO: From TranslationServiceFog_RandomMobility
+        for (int id = 1; id <= NUMBER_OF_MOBILE_USER; id++) {
+            userMobilityPattern.put(id, References.DIRECTIONAL_MOBILITY);
+        }
+        locator.parseUserInfo(userMobilityPattern, datasetReference);
+        List<String> mobileUserDataIds = locator.getMobileUserDataId();
+        for (int i = 0; i < NUMBER_OF_MOBILE_USER; i++) {
+            FogDevice mobile = addMobile("mobile_" + i, userId, appId, References.NOT_SET); // adding mobiles to the physical topology. Smartphones have been modeled as fog devices as well.
+            mobile.setUplinkLatency(2); // latency of connection between the smartphone and proxy server is 2 ms
+            locator.linkDataWithInstance(mobile.getId(), mobileUserDataIds.get(i));
+            fogDevices.add(mobile);
+        }
+    }
+
+    private static FogDevice addMobile(String name, int userId, String appId, int parentId) {
+        FogDevice mobile = createAFogDevice(name, 500, 20, 1000, 270, 0, 87.53, 82.44, 83.25);
+        mobile.setParentId(parentId);
+        //locator.setInitialLocation(name,drone.getId());
+
+        // Input(SENSOR_TRANSMISSION_TIME): Sends an event/message (from sensor) to another entity by delaying the simulation time from the current time, with a tag representing the event type.
+        // This param controls the delay of sending this event/message
+        // But still not completely understand:
+        // what is sensor's role in this network?
+        // Is that an end device?
+        // Why the delay would happen?
+        // Who triggered this sending task?
+        Sensor mobileSensor = new Sensor("sensor-" + name, "M-SENSOR", userId, appId, new DeterministicDistribution(SENSOR_TRANSMISSION_TIME)); // inter-transmission time of EEG sensor follows a deterministic distribution
+        sensors.add(mobileSensor);
+        Actuator mobileDisplay = new Actuator("actuator-" + name, userId, appId, "M-DISPLAY");
+        actuators.add(mobileDisplay);
+        mobileSensor.setGatewayDeviceId(mobile.getId());
+        // Input
+        mobileSensor.setLatency(6.0);  // latency of connection between EEG sensors and the parent Smartphone is 6 ms
+        mobileDisplay.setGatewayDeviceId(mobile.getId());
+        // Input
+        mobileDisplay.setLatency(1.0);  // latency of connection between Display actuator and the parent Smartphone is 1 ms
+        return mobile;
+    }
 
     private static void createFogDevices() {
         FogDevice cloud = createAFogDevice("cloud", 44800, 40000, 100, 10000, 0, 0.01, 16 * 103, 16 * 83.25);
         fogDevices.add(cloud);
         getIdByName.put(cloud.getName(), cloud.getId());
-        for (int i = 0; i < numOfFogDevices; i++) {
+        for (int i = 0; i < NUM_OF_FOG_DEVICES; i++) {
             FogDevice device = createAFogDevice("FogDevice-" + i, getValue(12000, 15000), getValue(4000, 8000), getValue(200, 300), getValue(500, 1000), 1, 0.01, getValue(100, 120), getValue(70, 75));
             device.setParentId(cloud.getId());
             device.setUplinkLatency(10);
@@ -87,11 +194,13 @@ public class TestFog {
 
     /**
      * This function creates a Sequential Unidirectional dataflow application model
-     * @param appId a
+     *
+     * @param appId    a
      * @param brokerId b
      * @return r
      */
     private static Application createApplication(String appId, int brokerId) {
+        // python/SQL
         Application application = Application.createApplication(appId, brokerId);
         application.addAppModule("Module1", 10);
         application.addAppModule("Module2", 10);

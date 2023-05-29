@@ -60,7 +60,8 @@ public class ModulePlacementMobileEdgewards extends ModulePlacement{
 	
 	@Override
 	protected void mapModules() {
-		
+		// TODO: Ming - Implement the module placement algorithm
+		// Inside of this method, Find the way to decentralize the module placement
 		for(String deviceName : getModuleMapping().getModuleMapping().keySet()){
 			System.out.println("*****MapModules "+deviceName);
 			for(String moduleName : getModuleMapping().getModuleMapping().get(deviceName)){
