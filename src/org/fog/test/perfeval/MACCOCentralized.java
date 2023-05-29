@@ -79,7 +79,6 @@ public class MACCOCentralized {
 
             // TODO: Create mobility Datasets/Pattern
             // TODO: Define Service placement pattern
-            createFogDevices();
             createMobileUser(broker.getId(), APP_ID, DATASET_REFERENCE);
             createFogDevices();
 
@@ -90,7 +89,8 @@ public class MACCOCentralized {
                     moduleMapping.addModuleToDevice("service_one", device.getName());
                 }
             }
-            Controller controller = new Controller("master_controller", fogDevices, sensors, actuators);
+
+            MobilityController controller = new MobilityController("master_controller", fogDevices, sensors, actuators, locator);
             controller.submitApplication(application, new ModulePlacementMobileEdgewards(fogDevices, sensors, actuators, application, moduleMapping));
 
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
@@ -101,10 +101,6 @@ public class MACCOCentralized {
             e.printStackTrace();
             Log.printLine("Unwanted error happened");
         }
-        // *Network stuff
-        // Subneting
-        // Firewall
-        // Oracle/ vodafone/ mastercard job ID
     }
 
     private static void createMobileUser(int userId, String appId, String datasetReference) throws IOException {
@@ -122,6 +118,7 @@ public class MACCOCentralized {
         }
     }
 
+    // This function creates a device which has fog device, sensor, and actuator. They are all mobile, sensor and actuator's gateway is the fog device.
     private static FogDevice addMobile(String name, int userId, String appId, int parentId) {
         FogDevice mobile = createAFogDevice(name, 500, 20, 1000, 270, 0, 87.53, 82.44, 83.25);
         mobile.setParentId(parentId);
