@@ -34,7 +34,7 @@ import java.util.*;
  * How to run?
  * Make it work
  */
-public class MACCOCentralized {
+public class ACOCentralized {
     static List<FogDevice> fogDevices = new ArrayList<>();
 
     static Map<String, Integer> getIdByName = new HashMap<>();
@@ -49,7 +49,7 @@ public class MACCOCentralized {
 
     static final int NUM_OF_FOG_DEVICES = 10;
 
-    static final String DATASET_REFERENCE = References.dataset_reference;
+    static final String DATASET_REFERENCE = References.dataset_reference_dub;
 
     static final int CLOUD_USER_NUM = 1;
 
@@ -143,13 +143,23 @@ public class MACCOCentralized {
         return mobile;
     }
 
-    private static void createFogDevices() {
+    private static void createFogDevicesOrg() {
         FogDevice cloud = createAFogDevice("cloud", 44800, 40000, 100, 10000, 0, 0.01, 16 * 103, 16 * 83.25);
         fogDevices.add(cloud);
         getIdByName.put(cloud.getName(), cloud.getId());
         for (int i = 0; i < NUM_OF_FOG_DEVICES; i++) {
             FogDevice device = createAFogDevice("FogDevice-" + i, getValue(12000, 15000), getValue(4000, 8000), getValue(200, 300), getValue(500, 1000), 1, 0.01, getValue(100, 120), getValue(70, 75));
             device.setParentId(cloud.getId());
+            device.setUplinkLatency(10);
+            fogDevices.add(device);
+            getIdByName.put(device.getName(), device.getId());
+        }
+    }
+
+    private static void createFogDevices() {
+        for (int i = 0; i < NUM_OF_FOG_DEVICES; i++) {
+            FogDevice device = createAFogDevice("FogDevice-" + i, getValue(12000, 15000), getValue(4000, 8000), getValue(200, 300), getValue(500, 1000), 0, 0.01, getValue(100, 120), getValue(70, 75));
+            // Do we need to set parent ID to References.NOT_SET?
             device.setUplinkLatency(10);
             fogDevices.add(device);
             getIdByName.put(device.getName(), device.getId());
