@@ -77,7 +77,6 @@ public class MACCOCentralized {
             DataParser dataObject = new DataParser();
             locator = new LocationHandler(dataObject);
 
-            // TODO: Create mobility Datasets/Pattern
             // TODO: Define Service placement pattern
             createMobileUser(broker.getId(), APP_ID, DATASET_REFERENCE);
             createFogDevices();
@@ -96,7 +95,7 @@ public class MACCOCentralized {
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
             CloudSim.startSimulation();
             CloudSim.stopSimulation();
-            Log.printLine("Translation Service finished!");
+            Log.printLine("Simulating MAACO finished!");
         } catch (Exception e) {
             e.printStackTrace();
             Log.printLine("Unwanted error happened");
@@ -104,7 +103,7 @@ public class MACCOCentralized {
     }
 
     private static void createMobileUser(int userId, String appId, String datasetReference) throws IOException {
-        // TODO: From TranslationServiceFog_RandomMobility
+        // From TranslationServiceFog_RandomMobility
         for (int id = 1; id <= NUMBER_OF_MOBILE_USER; id++) {
             userMobilityPattern.put(id, References.DIRECTIONAL_MOBILITY);
         }
