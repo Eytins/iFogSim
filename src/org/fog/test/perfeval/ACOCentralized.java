@@ -15,6 +15,7 @@ import org.fog.application.Application;
 import org.fog.application.selectivity.FractionalSelectivity;
 import org.fog.entities.*;
 import org.fog.mobilitydata.DataParser;
+import org.fog.mobilitydata.Location;
 import org.fog.mobilitydata.References;
 import org.fog.placement.*;
 import org.fog.policy.AppModuleAllocationPolicy;
@@ -47,9 +48,9 @@ public class ACOCentralized {
 
     static Map<Integer, Integer> userMobilityPattern = new HashMap<Integer, Integer>();
 
-    static final int NUM_OF_FOG_DEVICES = 10;
+    public static final int NUM_OF_FOG_DEVICES = 10;
 
-    static final String DATASET_REFERENCE = References.dataset_reference_dub;
+    static final String DATASET_REFERENCE = References.dataset_reference;
 
     static final int CLOUD_USER_NUM = 1;
 
@@ -61,6 +62,7 @@ public class ACOCentralized {
 
     static final boolean CLOUD = false;
 
+    // Only one user here and its ID is 1
     static final int NUMBER_OF_MOBILE_USER = 1;
 
     public static void main(String[] args) {
@@ -90,9 +92,13 @@ public class ACOCentralized {
             }
 
             MobilityController controller = new MobilityController("master_controller", fogDevices, sensors, actuators, locator);
-            controller.submitApplication(application, new ModulePlacementMobileEdgewards(fogDevices, sensors, actuators, application, moduleMapping));
+            // The ModulePlacementMobileEdgewards here is the placement policy
+            controller.submitApplication(application, 0, new ModulePlacementMobileEdgewards(fogDevices, sensors, actuators, application, moduleMapping));
 
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
+
+            Map<Double, Map<String, Location>> nodesNearRoute = getNodesNearRoute(dataObject);
+            System.out.println(nodesNearRoute.size());
             CloudSim.startSimulation();
             CloudSim.stopSimulation();
             Log.printLine("Simulating MAACO finished!");
@@ -119,7 +125,7 @@ public class ACOCentralized {
 
     // This function creates a device which has fog device, sensor, and actuator. They are all mobile, sensor and actuator's gateway is the fog device.
     private static FogDevice addMobile(String name, int userId, String appId, int parentId) {
-        FogDevice mobile = createAFogDevice(name, 500, 20, 1000, 270, 0, 87.53, 82.44, 83.25);
+        FogDevice mobile = createFogDevice(name, 500, 20, 1000, 270, 0, 87.53, 82.44);
         mobile.setParentId(parentId);
         //locator.setInitialLocation(name,drone.getId());
 
@@ -144,11 +150,11 @@ public class ACOCentralized {
     }
 
     private static void createFogDevicesOrg() {
-        FogDevice cloud = createAFogDevice("cloud", 44800, 40000, 100, 10000, 0, 0.01, 16 * 103, 16 * 83.25);
+        FogDevice cloud = createFogDevice("cloud", 44800, 40000, 100, 10000, 0.01, 16 * 103, 16 * 83.25);
         fogDevices.add(cloud);
         getIdByName.put(cloud.getName(), cloud.getId());
         for (int i = 0; i < NUM_OF_FOG_DEVICES; i++) {
-            FogDevice device = createAFogDevice("FogDevice-" + i, getValue(12000, 15000), getValue(4000, 8000), getValue(200, 300), getValue(500, 1000), 1, 0.01, getValue(100, 120), getValue(70, 75));
+            FogDevice device = createFogDevice("device", 44800, 40000, 100, 10000, 0.01, 16 * 103, 16 * 83.25);
             device.setParentId(cloud.getId());
             device.setUplinkLatency(10);
             fogDevices.add(device);
@@ -156,9 +162,40 @@ public class ACOCentralized {
         }
     }
 
-    private static void createFogDevices() {
+    private static void createFogDevices() throws IOException {
+        locator.parseResourceInfo();
+
+        if (locator.getLevelWiseResources(locator.getLevelID("Cloud")).size() == 1) {
+            // creates the fog device Cloud at the apex of the hierarchy with level=0
+            FogDevice cloud = createFogDevice("cloud", 44800, 40000, 100, 10000, 0.01, 16 * 103, 16 * 83.25);
+            cloud.setParentId(References.NOT_SET);
+            locator.linkDataWithInstance(cloud.getId(), locator.getLevelWiseResources(locator.getLevelID("Cloud")).get(0));
+            fogDevices.add(cloud);
+
+            for (int i = 0; i < locator.getLevelWiseResources(locator.getLevelID("Proxy")).size(); i++) {
+                // creates the fog device Proxy Server (level=1)
+                FogDevice proxy = createFogDevice("proxy-server_" + i, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333);
+                locator.linkDataWithInstance(proxy.getId(), locator.getLevelWiseResources(locator.getLevelID("Proxy")).get(i));
+                proxy.setParentId(cloud.getId()); // setting Cloud as parent of the Proxy Server
+                proxy.setUplinkLatency(100); // latency of connection from Proxy Server to the Cloud is 100 ms
+                fogDevices.add(proxy);
+
+            }
+
+            for (int i = 0; i < locator.getLevelWiseResources(locator.getLevelID("Gateway")).size(); i++) {
+                FogDevice gateway = createFogDevice("gateway_" + i, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333);
+                locator.linkDataWithInstance(gateway.getId(), locator.getLevelWiseResources(locator.getLevelID("Gateway")).get(i));
+                gateway.setParentId(locator.determineParent(gateway.getId(), References.SETUP_TIME));
+                gateway.setUplinkLatency(4);
+                fogDevices.add(gateway);
+            }
+
+        }
+    }
+
+    private static void createFogDevicesV1() {
         for (int i = 0; i < NUM_OF_FOG_DEVICES; i++) {
-            FogDevice device = createAFogDevice("FogDevice-" + i, getValue(12000, 15000), getValue(4000, 8000), getValue(200, 300), getValue(500, 1000), 0, 0.01, getValue(100, 120), getValue(70, 75));
+            FogDevice device = createFogDevice("FogDevice_" + i, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333);
             // Do we need to set parent ID to References.NOT_SET?
             device.setUplinkLatency(10);
             fogDevices.add(device);
@@ -166,7 +203,8 @@ public class ACOCentralized {
         }
     }
 
-    private static FogDevice createAFogDevice(String nodeName, long mips, int ram, long upBw, long downBw, int level, double ratePerMips, double busyPower, double idlePower) {
+    private static FogDevice createFogDevice(String nodeName, long mips,
+                                             int ram, long upBw, long downBw, double ratePerMips, double busyPower, double idlePower) {
         List<Pe> peList = new ArrayList<>();
         // MIPS is "Millions of Instructions Per Second." It is a measure of the performance of a computer's processor or CPU
         peList.add(new Pe(0, new PeProvisionerOverbooking(mips)));
@@ -174,7 +212,13 @@ public class ACOCentralized {
         long storage = 1000000;
         int bw = 10000;
         // PowerHost class enables simulation of power-aware hosts.
-        PowerHost host = new PowerHost(hostId, new RamProvisionerSimple(ram), new BwProvisionerOverbooking(bw), storage, peList, new StreamOperatorScheduler(peList), new FogLinearPowerModel(busyPower, idlePower));
+        PowerHost host = new PowerHost(hostId,
+                new RamProvisionerSimple(ram),
+                new BwProvisionerOverbooking(bw),
+                storage,
+                peList,
+                new StreamOperatorScheduler(peList),
+                new FogLinearPowerModel(busyPower, idlePower));
         List<Host> hostList = new ArrayList<>();
         // hostList includes a power-aware host
         hostList.add(host);
@@ -187,14 +231,15 @@ public class ACOCentralized {
         double costPerStorage = 0.001;
         double costPerBw = 0.0;
         LinkedList<Storage> storageList = new LinkedList<>();
-        FogDeviceCharacteristics characteristics = new FogDeviceCharacteristics(arch, os, vmm, host, time_zone, cost, costPerMem, costPerStorage, costPerBw);
+        FogDeviceCharacteristics characteristics = new FogDeviceCharacteristics(
+                arch, os, vmm, host, time_zone, cost, costPerMem, costPerStorage, costPerBw);
         FogDevice fogdevice = null;
         try {
             fogdevice = new FogDevice(nodeName, characteristics, new AppModuleAllocationPolicy(hostList), storageList, 10, upBw, downBw, 0, ratePerMips);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        fogdevice.setLevel(level);
+
         return fogdevice;
     }
 
@@ -254,5 +299,35 @@ public class ACOCentralized {
         Random r = new Random();
         int randomValue = min + r.nextInt() % (max - min);
         return randomValue;
+    }
+
+    private static Map<Double, Map<String, Location>> getNodesNearRoute(DataParser dataObject) {
+        // Time, <ID of FogDevice, Location>
+        Map<Double, Map<String, Location>> res = new HashMap<>();
+        // Only one user here (From userMobilityPattern)
+        String userId = "usr_1";
+        for (Map.Entry<Double, Location> user : dataObject.usersLocation.get(userId).entrySet()) {
+            // usersLocation.put("usr_" + userID, tempUserLocationInfo);
+            // userID, time (References.INIT_TIME(const, unuseful)), location
+            // for every location, find nodes around the location,
+            Location location = user.getValue();
+            // TODO: Define the scope
+            double latitudeMin = location.latitude;
+            double latitudeMax = location.latitude;
+            double longitudeMin = location.longitude;
+            double longitudeMax = location.longitude;
+
+            for (Map.Entry<String, Location> each : locator.dataObject.resourceLocationData.entrySet()) {
+                if (each.getValue().longitude > longitudeMin &&
+                        each.getValue().longitude < longitudeMax &&
+                        each.getValue().latitude > latitudeMin &&
+                        each.getValue().latitude < latitudeMax) {
+                    Map<String, Location> tempResLocationInfo = new HashMap<>();
+                    tempResLocationInfo.put(each.getKey(), each.getValue());
+                    res.put(user.getKey(), tempResLocationInfo);
+                }
+            }
+        }
+        return res;
     }
 }

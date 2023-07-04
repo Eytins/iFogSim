@@ -8,6 +8,7 @@
       <root url="jar://$PROJECT_DIR$/jars/cloudsim-3.0.3-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/jars/json-simple-1.1.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/jars/cloudsim-examples-3.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/jars/isula-0.0.1-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

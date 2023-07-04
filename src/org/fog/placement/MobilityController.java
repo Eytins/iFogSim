@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import isula.aco.AntColony;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
@@ -447,11 +448,24 @@ public class MobilityController extends SimEntity{
 		this.actuators = actuators;
 	}
 
+	public void calculateACOModulePlacementPolicy() {
+		// TODO: Define the input of ACO
+		/**
+		 * Inputs:
+		 * 1. Start point
+		 * 2. End point
+		 * 3. All points (Fog devices)
+ 		 */
+		// Get some nodes around the
+	}
+
 	public Map<String, ModulePlacement> getAppModulePlacementPolicy() {
+		// TODO
 		return appModulePlacementPolicy;
 	}
 
 	public void setAppModulePlacementPolicy(Map<String, ModulePlacement> appModulePlacementPolicy) {
+		// TODO:
 		this.appModulePlacementPolicy = appModulePlacementPolicy;
 	}
 	
