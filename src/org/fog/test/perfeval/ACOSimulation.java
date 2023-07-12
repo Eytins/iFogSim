@@ -1,5 +1,11 @@
 package org.fog.test.perfeval;
 
+import isula.aco.*;
+import isula.aco.algorithms.antsystem.OfflinePheromoneUpdate;
+import isula.aco.algorithms.antsystem.PerformEvaporation;
+import isula.aco.algorithms.antsystem.RandomNodeSelection;
+import isula.aco.algorithms.antsystem.StartPheromoneMatrix;
+import isula.aco.exception.InvalidInputException;
 import org.apache.commons.math3.util.Pair;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
@@ -10,6 +16,9 @@ import org.cloudbus.cloudsim.power.PowerHost;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 import org.cloudbus.cloudsim.sdn.overbooking.BwProvisionerOverbooking;
 import org.cloudbus.cloudsim.sdn.overbooking.PeProvisionerOverbooking;
+import org.fog.aco.ACOAnt;
+import org.fog.aco.ACOEnvironment;
+import org.fog.aco.ACOProblemConfiguration;
 import org.fog.application.AppEdge;
 import org.fog.application.AppLoop;
 import org.fog.application.Application;
@@ -32,6 +41,7 @@ import org.fog.utils.TimeKeeper;
 import org.fog.utils.distribution.DeterministicDistribution;
 import org.json.simple.parser.ParseException;
 
+import javax.naming.ConfigurationException;
 import java.io.IOException;
 import java.util.*;
 
@@ -40,7 +50,7 @@ import java.util.*;
  *
  * @author Mohammad Goudarzi
  */
-public class ACO {
+public class ACOSimulation {
     static List<FogDevice> fogDevices = new ArrayList<FogDevice>();
 
     static List<Sensor> sensors = new ArrayList<Sensor>();
@@ -81,7 +91,6 @@ public class ACO {
 
             Application application = createApplication(appId, broker.getId());
             application.setUserId(broker.getId());
-
             DataParser dataObject = new DataParser();
             locator = new LocationHandler(dataObject);
 
@@ -125,6 +134,8 @@ public class ACO {
             }
             System.out.println(size);
 
+            // The num 5 is referring the loop inside createApplication function
+            startACO(startNodeInstanceId, endNodeInstanceId, 5);
 
             CloudSim.startSimulation();
 
@@ -373,4 +384,54 @@ public class ACO {
         }
         return new ArrayList<>(set);
     }
+
+    private static void startACO(int idOfStartNode, int idOfEndNode, int numOfServices) throws InvalidInputException, ConfigurationException {
+        double[][] symbolicProblemRepresentation = new double[1][1];
+        ACOEnvironment environment = new ACOEnvironment(symbolicProblemRepresentation, fogDevices, idOfStartNode, idOfEndNode, numOfServices);
+        ACOProblemConfiguration configuration = new ACOProblemConfiguration(environment);
+        AntColony<FogDevice, ACOEnvironment> colony = getAntColony(configuration);
+        AcoProblemSolver<FogDevice, ACOEnvironment> solver = new AcoProblemSolver<>();
+        solver.initialize(environment, colony, configuration);
+        solver.addDaemonActions(new StartPheromoneMatrix<>(), new PerformEvaporation<>());
+
+        solver.addDaemonActions(getPheromoneUpdatePolicy());
+
+        solver.getAntColony().addAntPolicies(new AntPolicy<FogDevice, ACOEnvironment>(AntPolicyType.NODE_SELECTION) {
+            @Override
+            public boolean applyPolicy(ACOEnvironment environment, ConfigurationProvider configurationProvider) {
+                return false;
+            }
+        });
+        solver.solveProblem();
+    }
+
+
+    /**
+     * On TSP, the pheromone value update procedure depends on the distance of the generated routes.
+     *
+     * @return A daemon action that implements this procedure.
+     */
+    private static DaemonAction<FogDevice, ACOEnvironment> getPheromoneUpdatePolicy() {
+        return new OfflinePheromoneUpdate<FogDevice, ACOEnvironment>() {
+            @Override
+            protected double getPheromoneDeposit(Ant<FogDevice, ACOEnvironment> ant,
+                                                 Integer positionInSolution,
+                                                 FogDevice solutionComponent,
+                                                 ACOEnvironment environment,
+                                                 ConfigurationProvider configurationProvider) {
+                return 1 / ant.getSolutionCost(environment);
+            }
+        };
+    }
+
+
+    public static AntColony<FogDevice, ACOEnvironment> getAntColony(final ConfigurationProvider configurationProvider) {
+        return new AntColony<FogDevice, ACOEnvironment>(configurationProvider.getNumberOfAnts()) {
+            @Override
+            protected Ant<FogDevice, ACOEnvironment> createAnt(ACOEnvironment environment) {
+                return new ACOAnt(environment.getFogDevices().size());
+            }
+        };
+    }
+
 }

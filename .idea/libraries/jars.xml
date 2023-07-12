@@ -11,6 +11,9 @@
       <root url="jar://$PROJECT_DIR$/jars/isula-0.0.1-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/lib/SOFTX_2019_61/src" />
+      <root url="file://$PROJECT_DIR$/lib/SOFTX_2019_61/test" />
+    </SOURCES>
   </library>
 </component>

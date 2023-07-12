@@ -29,6 +29,7 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
 
     public ACOAnt(int numberOfNodes) {
         this.numberOfNodes = numberOfNodes;
+        this.setSolution(new FogDevice[numberOfNodes]);
     }
 
     @Override
@@ -43,6 +44,7 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
      * When the ant has passed greater than serviceNum of nodes and reached end point.
      * <p>
      * Define when the Ant must stop adding components to its solution.
+     *
      * @param acoEnvironment Environment instance with problem information.
      * @return True if the solution is finished, false otherwise.
      */
@@ -59,6 +61,7 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
      * Or: Calculates the total cost or distance associated with the path traversed
      * from the start point to the end point, while passing through the
      * required number of nodes or satisfying other constraints
+     *
      * @param acoEnvironment Environment instance with problem information.
      * @return The cost of the solution built.
      */
@@ -83,9 +86,10 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
      * associated with adding a specific component to the current solution
      * <p>
      * When the solution is empty we take a random node as a reference.
-     * @param fogDevice Solution component
+     *
+     * @param fogDevice          Solution component
      * @param positionInSolution Position of this component in the solution.
-     * @param acoEnvironment Environment instance with problem information.
+     * @param acoEnvironment     Environment instance with problem information.
      * @return Heuristic contribution
      */
     @Override
@@ -94,7 +98,7 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
         if (getCurrentIndex() > 0) {
             lastComponent = this.getSolution()[getCurrentIndex() - 1];
         } else {
-            lastComponent = acoEnvironment.fogDevices.get(this.initialReference);
+            lastComponent = acoEnvironment.getFogDevices().get(this.initialReference);
         }
 
         double cost = getCostBetweenTwoNodes(lastComponent, fogDevice, acoEnvironment) + DELTA;
@@ -103,15 +107,21 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
 
     /**
      * The components that are available for selection while an Ant is constructing its solution.
+     *
      * @param acoEnvironment Environment instance with problem information.
      * @return List of available components.
      */
     @Override
     public List<FogDevice> getNeighbourhood(ACOEnvironment acoEnvironment) {
         Map<Integer, Map<Integer, Double>> latencyMatrix = acoEnvironment.getLatencyMatrix();
-        Set<Integer> ids = latencyMatrix.get(getSolution()[getCurrentIndex()].getId()).keySet();
+        Set<Integer> ids;
+        if (getCurrentIndex() == 0) {
+            ids = latencyMatrix.get(acoEnvironment.getIdOfStartNode()).keySet();
+        } else {
+            ids = latencyMatrix.get(getSolution()[getCurrentIndex() - 1].getId()).keySet();
+        }
         List<FogDevice> res = new ArrayList<>();
-        for (FogDevice device : acoEnvironment.fogDevices) {
+        for (FogDevice device : acoEnvironment.getFogDevices()) {
             if (ids.contains(device.getId())) {
                 res.add(device);
             }
@@ -121,9 +131,10 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
 
     /**
      * Returns the pheromone value associated to a solution component at a specific position
-     * @param fogDevice Solution component.
+     *
+     * @param fogDevice          Solution component.
      * @param positionInSolution Position of this component in the solution.
-     * @param acoEnvironment Environment instance with problem information.
+     * @param acoEnvironment     Environment instance with problem information.
      * @return Pheromone value.
      */
     @Override
@@ -132,7 +143,7 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
         if (positionInSolution > 0) {
             previousComponent = getSolution()[positionInSolution - 1];
         } else {
-            previousComponent = acoEnvironment.fogDevices.get(this.initialReference);
+            previousComponent = acoEnvironment.getFogDevices().get(this.initialReference);
         }
         double[][] pheromoneMatrix = acoEnvironment.getPheromoneMatrix();
         return pheromoneMatrix[fogDevice.getId()][previousComponent.getId()];
@@ -140,10 +151,11 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
 
     /**
      * Updates the value of a cell on the pheromone matrix.
-     * @param fogDevice Solution component.
+     *
+     * @param fogDevice          Solution component.
      * @param positionInSolution Position of this component in the solution.
-     * @param acoEnvironment Environment instance with problem information.
-     * @param value New pheromone value.
+     * @param acoEnvironment     Environment instance with problem information.
+     * @param value              New pheromone value.
      */
     @Override
     public void setPheromoneTrailValue(FogDevice fogDevice, Integer positionInSolution, ACOEnvironment acoEnvironment, Double value) {
@@ -151,7 +163,7 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
         if (positionInSolution > 0) {
             previousComponent = getSolution()[positionInSolution - 1];
         } else {
-            previousComponent = acoEnvironment.fogDevices.get(this.initialReference);
+            previousComponent = acoEnvironment.getFogDevices().get(this.initialReference);
         }
 
         double[][] pheromoneMatrix = acoEnvironment.getPheromoneMatrix();
@@ -161,13 +173,14 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
 
     /**
      * Get the latency cost between two connecting nodes
-     * @param start Send node
-     * @param end Receive node
+     *
+     * @param start       Send node
+     * @param end         Receive node
      * @param environment Environment
      * @return The cost, Double.MAX_VALUE if two nodes are not connected directly.
      */
-    private double getCostBetweenTwoNodes(FogDevice start, FogDevice end, ACOEnvironment environment) {
+    private static double getCostBetweenTwoNodes(FogDevice start, FogDevice end, ACOEnvironment environment) {
         Map<Integer, Double> map = environment.getLatencyMatrix().get(start.getId());
-        return map.getOrDefault(end.getId(), Double.MAX_VALUE);
+        return map.getOrDefault(end.getId(), 999.9);
     }
 }

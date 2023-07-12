@@ -10,13 +10,15 @@ import java.util.Map;
 
 public class ACOEnvironment extends Environment {
 
-    List<FogDevice> fogDevices;
+    private List<FogDevice> fogDevices;
+
+    private Map<Integer, FogDevice> fogDevicesMap;
 
     private final int idOfStartNode;
 
     private final int idOfEndNode;
 
-    private final int numOfDevices;
+    private final int numOfServices;
 
     private final Map<Integer, Map<Integer, Double>> latencyMatrix;
 
@@ -25,17 +27,23 @@ public class ACOEnvironment extends Environment {
     public ACOEnvironment(double[][] problemRepresentation,
                           List<FogDevice> fogDevices,
                           int idOfStartNode, int idOfEndNode,
-                          int numOfDevices) throws InvalidInputException {
+                          int numOfServices) throws InvalidInputException {
         super(problemRepresentation);
         this.fogDevices = fogDevices;
         this.idOfStartNode = idOfStartNode;
         this.idOfEndNode = idOfEndNode;
-        this.numOfDevices = numOfDevices;
+        this.numOfServices = numOfServices;
+        this.fogDevicesMap = FogDeviceUtils.fogDeviceListToMap(fogDevices);
         this.latencyMatrix = FogDeviceUtils.createLatencyMatrix(fogDevices);
+        this.setPheromoneMatrix(this.createPheromoneMatrix());
     }
 
-    public int getNumOfFogDevices() {
-        return fogDevices.size();
+    public List<FogDevice> getFogDevices() {
+        return fogDevices;
+    }
+
+    public Map<Integer, FogDevice> getFogDevicesMap() {
+        return fogDevicesMap;
     }
 
     public int getIdOfStartNode() {
@@ -47,7 +55,7 @@ public class ACOEnvironment extends Environment {
     }
 
     public int getNumOfServices() {
-        return numOfDevices;
+        return numOfServices;
     }
 
     public Map<Integer, Map<Integer, Double>> getLatencyMatrix() {
@@ -63,6 +71,9 @@ public class ACOEnvironment extends Environment {
     @Override
     protected double[][] createPheromoneMatrix() {
         int maxId = 0;
+        if (fogDevices == null) {
+            return null;
+        }
         for (FogDevice device : fogDevices) {
             maxId = Math.max(maxId, device.getId());
         }
