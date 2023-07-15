@@ -3,7 +3,6 @@ package org.fog.test.perfeval;
 import isula.aco.*;
 import isula.aco.algorithms.antsystem.OfflinePheromoneUpdate;
 import isula.aco.algorithms.antsystem.PerformEvaporation;
-import isula.aco.algorithms.antsystem.RandomNodeSelection;
 import isula.aco.algorithms.antsystem.StartPheromoneMatrix;
 import isula.aco.exception.InvalidInputException;
 import org.apache.commons.math3.util.Pair;
@@ -51,7 +50,7 @@ import java.util.*;
  *
  * @author Mohammad Goudarzi
  */
-public class ACOSimulation {
+public class ACOSimulationClustering {
     static List<FogDevice> fogDevices = new ArrayList<FogDevice>();
 
     static List<Sensor> sensors = new ArrayList<Sensor>();

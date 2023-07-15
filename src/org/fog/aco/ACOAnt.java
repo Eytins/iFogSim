@@ -51,7 +51,7 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
     @Override
     public boolean isSolutionReady(ACOEnvironment acoEnvironment) {
         return (getCurrentIndex() >= acoEnvironment.getNumOfServices() - 1)
-                && (getSolution()[getCurrentIndex()].getId() == acoEnvironment.getIdOfEndNode());
+                && (getSolution()[getCurrentIndex() - 1].getId() == acoEnvironment.getIdOfEndNode());
     }
 
     /**
