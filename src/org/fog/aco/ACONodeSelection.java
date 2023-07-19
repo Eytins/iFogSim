@@ -25,6 +25,13 @@ public class ACONodeSelection extends AntPolicy<FogDevice, ACOEnvironment> {
 
         HashMap<FogDevice, Double> componentsWithProbabilities = this
                 .getComponentsWithProbabilities(environment, configurationProvider);
+
+        if (componentsWithProbabilities.size() < 1) {
+            // Set this ant as invalid
+            getAnt().setCurrentIndex(Integer.MIN_VALUE);
+            return true;
+        }
+
         Iterator<Map.Entry<FogDevice, Double>> componentWithProbabilitiesIterator = componentsWithProbabilities
                 .entrySet().iterator();
         while (componentWithProbabilitiesIterator.hasNext()) {
@@ -73,9 +80,6 @@ public class ACONodeSelection extends AntPolicy<FogDevice, ACOEnvironment> {
             if (!getAnt().isNodeVisited(possibleMove)
                     && getAnt().isNodeValid(possibleMove)) {
                 // If it is leaf node and not end, then break
-                if (possibleMove.getName().contains("gateway") && (environment.getIdOfEndNode() != possibleMove.getId())) {
-                    continue;
-                }
 
                 Double heuristicTimesPheromone = getHeuristicTimesPheromone(
                         environment, configurationProvider, possibleMove);
@@ -105,8 +109,10 @@ public class ACONodeSelection extends AntPolicy<FogDevice, ACOEnvironment> {
         Map<FogDevice, Boolean> visited = getAnt().getVisited();
         int currentIndex = getAnt().getCurrentIndex();
 
+
         if (componentsWithProbabilities.size() < 1) {
-            return doIfNoComponentsFound(environment, configurationProvider);
+//            return doIfNoComponentsFound(environment, configurationProvider);
+            return componentsWithProbabilities;
         }
         double delta = 0.001;
         if (Math.abs(totalProbability - 1.0) > delta) {

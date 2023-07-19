@@ -115,6 +115,10 @@ public class FogDeviceUtils {
         for (FogDevice sendDevice : fogDevices) {
             Map<Integer, Double> childToLatencyMap = sendDevice.getChildToLatencyMap();
             childToLatencyMap.put(sendDevice.getParentId(), sendDevice.getUplinkLatency());
+            Map<Integer, Double> clusterMembersToLatencyMap = sendDevice.getClusterMembersToLatencyMap();
+            if (clusterMembersToLatencyMap != null) {
+                childToLatencyMap.putAll(clusterMembersToLatencyMap);
+            }
             matrix.put(sendDevice.getId(), childToLatencyMap);
         }
         return matrix;
