@@ -70,17 +70,13 @@ public class ACOEnvironment extends Environment {
      */
     @Override
     protected double[][] createPheromoneMatrix() {
-        int maxId = 0;
         if (fogDevices == null) {
             return null;
         }
-        for (FogDevice device : fogDevices) {
-            maxId = Math.max(maxId, device.getId());
-        }
-
+        int maxID = FogDeviceUtils.getMaxFogDeviceID(fogDevices);
         if (this.getProblemRepresentation() != null) {
             // Based on observation, maxId is greater than the length of FogDevices.
-            return new double[maxId + 1][maxId + 1];
+            return new double[maxID + 1][maxID + 1];
         }
 
         return null;

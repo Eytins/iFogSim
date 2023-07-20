@@ -123,4 +123,43 @@ public class FogDeviceUtils {
         }
         return matrix;
     }
+
+    public static int getMaxFogDeviceID(List<FogDevice> fogDevices) {
+        int maxId = 0;
+        for (FogDevice device : fogDevices) {
+            maxId = Math.max(maxId, device.getId());
+        }
+        return maxId;
+    }
+
+    private static final double EARTH_RADIUS = 6371000; // Earth's radius in meters
+
+    /**
+     * Calculate the distance of two devices
+     *
+     * @param device1 one fog device
+     * @param device2 another fog device
+     * @param locator LocationHandler
+     * @return The distance in meters
+     */
+    public static double calculateDistanceBetweenDevices(FogDevice device1, FogDevice device2, LocationHandler locator) {
+        double device1Latitude = locator.dataObject.resourceLocationData.get(locator.instanceToDataId.get(device1.getId())).latitude;
+        double device1Longitude = locator.dataObject.resourceLocationData.get(locator.instanceToDataId.get(device1.getId())).longitude;
+        double device2Latitude = locator.dataObject.resourceLocationData.get(locator.instanceToDataId.get(device2.getId())).latitude;
+        double device2Longitude = locator.dataObject.resourceLocationData.get(locator.instanceToDataId.get(device2.getId())).longitude;
+        return calculateDistance(device1Latitude, device1Longitude, device2Latitude, device2Longitude);
+    }
+
+    private static double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return EARTH_RADIUS * c;
+    }
 }
