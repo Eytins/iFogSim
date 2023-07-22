@@ -392,7 +392,7 @@ public class ACOSimulation {
         List<FogDevice> devices = fogDevices;
         devices.remove(0);
         ACOEnvironment environment = new ACOEnvironment(symbolicProblemRepresentation, devices, idOfStartNode,
-                FogDeviceUtils.getIndexOfFogDeviceById(fogDevices, idOfStartNode), idOfEndNode, numOfServices);
+                FogDeviceUtils.getIndexOfFogDeviceById(fogDevices, idOfStartNode), idOfEndNode, numOfServices, locator);
         ACOProblemConfiguration configuration = new ACOProblemConfiguration(environment);
         AntColony<FogDevice, ACOEnvironment> colony = getAntColony(configuration);
         AcoProblemSolver<FogDevice, ACOEnvironment> solver = new AcoProblemSolver<>();

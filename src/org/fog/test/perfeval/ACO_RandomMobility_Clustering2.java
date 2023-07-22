@@ -377,7 +377,7 @@ public class ACO_RandomMobility_Clustering2 {
         double[][] symbolicProblemRepresentation = new double[1][1];
         List<FogDevice> devices = fogDevices;
         devices.remove(0);
-        ACOEnvironment environment = new ACOEnvironment(symbolicProblemRepresentation, devices, idOfStartNode, FogDeviceUtils.getIndexOfFogDeviceById(fogDevices, idOfStartNode), idOfEndNode, numOfServices);
+        ACOEnvironment environment = new ACOEnvironment(symbolicProblemRepresentation, devices, idOfStartNode, FogDeviceUtils.getIndexOfFogDeviceById(fogDevices, idOfStartNode), idOfEndNode, numOfServices, locator);
         ACOProblemConfiguration configuration = new ACOProblemConfiguration(environment);
         AntColony<FogDevice, ACOEnvironment> colony = getAntColony(configuration);
         AcoProblemSolver<FogDevice, ACOEnvironment> solver = new AcoProblemSolver<>();
@@ -391,9 +391,18 @@ public class ACO_RandomMobility_Clustering2 {
 
         FogDevice[] bestSolution = solver.getBestSolution();
 
-        System.out.println("Best Solution count: " + bestSolution.length);
-        System.out.println("First solution: " + bestSolution[0].getId()
-                + ", " + bestSolution[0].getName() + ", First node: " + idOfStartNode);
+        ArrayList<FogDevice> list = new ArrayList<>();
+        for (FogDevice device : bestSolution) {
+            if (device == null) {
+                break;
+            }
+            list.add(device);
+        }
+
+        System.out.println(bestSolution.length);
+        System.out.println("Best Solution count: " + list.size());
+        System.out.println("First solution: " + list.get(0).getId() + ", First node: " + idOfStartNode);
+        System.out.println("Last solution: " + list.get(list.size() - 1).getId() + ", Last node: " + idOfEndNode);
 
         // TODO: If want to check the last component in the solution, find the last item in the array that is not null.
         // System.out.println("Last solution: " + bestSolution[bestSolution.length - 1]);

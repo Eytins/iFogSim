@@ -379,7 +379,7 @@ public class ACO_RandomMobility_Clustering {
         double[][] symbolicProblemRepresentation = new double[1][1];
         List<FogDevice> devices = fogDevices;
         devices.remove(0);
-        ACOEnvironment environment = new ACOEnvironment(symbolicProblemRepresentation, devices, idOfStartNode, FogDeviceUtils.getIndexOfFogDeviceById(fogDevices, idOfStartNode), idOfEndNode, numOfServices);
+        ACOEnvironment environment = new ACOEnvironment(symbolicProblemRepresentation, devices, idOfStartNode, FogDeviceUtils.getIndexOfFogDeviceById(fogDevices, idOfStartNode), idOfEndNode, numOfServices, locator);
         ACOProblemConfiguration configuration = new ACOProblemConfiguration(environment);
         AntColony<FogDevice, ACOEnvironment> colony = getAntColony(configuration);
         AcoProblemSolver<FogDevice, ACOEnvironment> solver = new AcoProblemSolver<>();

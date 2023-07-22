@@ -2,6 +2,7 @@ package org.fog.aco;
 
 import isula.aco.Ant;
 import org.fog.entities.FogDevice;
+import org.fog.utils.FogDeviceUtils;
 
 import java.util.*;
 
@@ -57,8 +58,10 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
         if (getCurrentIndex() == Integer.MIN_VALUE) {
             return true;
         }
-        return (getCurrentIndex() >= acoEnvironment.getNumOfServices() - 1)
-                && (getSolution()[getCurrentIndex() - 1].getId() == acoEnvironment.getIdOfEndNode());
+        if (getCurrentIndex() == 0) {
+            return false;
+        }
+        return (getSolution()[getCurrentIndex() - 1].getId() == acoEnvironment.getIdOfEndNode());
     }
 
     /**
@@ -112,7 +115,8 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
             lastComponent = acoEnvironment.getFogDevices().get(this.initialReference);
         }
 
-        double cost = getCostBetweenTwoNodes(lastComponent, fogDevice, acoEnvironment) + DELTA;
+//        double cost = getCostBetweenTwoNodes(lastComponent, fogDevice, acoEnvironment) + DELTA;
+        double cost = FogDeviceUtils.calculateDistanceBetweenDevices(lastComponent, fogDevice, acoEnvironment.getLocator());
         return 1 / cost;
     }
 
@@ -198,9 +202,9 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
      */
     private static double getCostBetweenTwoNodes(FogDevice start, FogDevice end, ACOEnvironment environment) {
         if (start == null || end == null) {
-            return 1000.0;
+            return Double.MAX_VALUE;
         }
         Map<Integer, Double> map = environment.getLatencyMatrix().get(start.getId());
-        return map.getOrDefault(end.getId(), 1000.0);
+        return map.getOrDefault(end.getId(), Double.MAX_VALUE);
     }
 }

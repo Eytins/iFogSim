@@ -3,6 +3,7 @@ package org.fog.aco;
 import isula.aco.Environment;
 import isula.aco.exception.InvalidInputException;
 import org.fog.entities.FogDevice;
+import org.fog.placement.LocationHandler;
 import org.fog.utils.FogDeviceUtils;
 
 import java.util.List;
@@ -24,18 +25,19 @@ public class ACOEnvironment extends Environment {
 
     private final Map<Integer, Map<Integer, Double>> latencyMatrix;
 
-    private static final int NUM_OF_FOG_DEVICES = 15;
+    private final LocationHandler locator;
 
     public ACOEnvironment(double[][] problemRepresentation,
                           List<FogDevice> fogDevices,
                           int idOfStartNode, int indexOfStartNode, int idOfEndNode,
-                          int numOfServices) throws InvalidInputException {
+                          int numOfServices, LocationHandler locator) throws InvalidInputException {
         super(problemRepresentation);
         this.fogDevices = fogDevices;
         this.idOfStartNode = idOfStartNode;
         this.indexOfStartNode = indexOfStartNode;
         this.idOfEndNode = idOfEndNode;
         this.numOfServices = numOfServices;
+        this.locator = locator;
         this.fogDevicesMap = FogDeviceUtils.fogDeviceListToMap(fogDevices);
         this.latencyMatrix = FogDeviceUtils.createLatencyMatrix(fogDevices);
         this.setPheromoneMatrix(this.createPheromoneMatrix());
@@ -63,6 +65,10 @@ public class ACOEnvironment extends Environment {
 
     public int getNumOfServices() {
         return numOfServices;
+    }
+
+    public LocationHandler getLocator() {
+        return locator;
     }
 
     public Map<Integer, Map<Integer, Double>> getLatencyMatrix() {

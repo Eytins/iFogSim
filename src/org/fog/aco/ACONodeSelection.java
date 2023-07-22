@@ -110,11 +110,6 @@ public class ACONodeSelection extends AntPolicy<FogDevice, ACOEnvironment> {
             componentWithProbability.setValue(probability);
         }
 
-        FogDevice[] solution = getAnt().getSolution();
-        Map<FogDevice, Boolean> visited = getAnt().getVisited();
-        int currentIndex = getAnt().getCurrentIndex();
-
-
         if (componentsWithProbabilities.size() < 1) {
 //            return doIfNoComponentsFound(environment, configurationProvider);
             return componentsWithProbabilities;

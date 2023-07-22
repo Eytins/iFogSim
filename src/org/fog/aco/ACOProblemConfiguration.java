@@ -12,8 +12,7 @@ public class ACOProblemConfiguration implements ConfigurationProvider {
         // Create a random solution which can reach the goal
         List<Double> randomSolutionLatencies = new ArrayList<>();
         Random random = new Random();
-        int solutionRange = random.nextInt(environment.getFogDevices().size() - environment.getNumOfServices())
-                + environment.getNumOfServices();
+        int solutionRange = environment.getNumOfServices();
 
         List<Double> latencies = new ArrayList<>();
         Map<Integer, Map<Integer, Double>> latencyMatrix = environment.getLatencyMatrix();
@@ -32,7 +31,7 @@ public class ACOProblemConfiguration implements ConfigurationProvider {
 
     @Override
     public int getNumberOfAnts() {
-        return 3;
+        return 100;
     }
 
     @Override
@@ -52,11 +51,11 @@ public class ACOProblemConfiguration implements ConfigurationProvider {
 
     @Override
     public double getHeuristicImportance() {
-        return 3.5;
+        return 2.5;
     }
 
     @Override
     public double getPheromoneImportance() {
-        return 0.01;
+        return 1.0;
     }
 }
