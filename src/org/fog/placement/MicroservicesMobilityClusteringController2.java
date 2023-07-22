@@ -69,15 +69,15 @@ public class MicroservicesMobilityClusteringController2 extends MicroservicesCon
         int maxID = FogDeviceUtils.getMaxFogDeviceID(fogDevices);
         double[][] distanceMatrix = new double[maxID + 1][maxID + 1];
         int size = fogDevices.size();
-        for (int i = 1; i < size - 1; i++) {
-            for (int j = i + 1; j < size; j++) {
-                distanceMatrix[i][j] = FogDeviceUtils.calculateDistanceBetweenDevices(fogDevices.get(i), fogDevices.get(j), locator);
-            }
-        }
+//        for (int i = 1; i < size - 1; i++) {
+//            for (int j = i + 1; j < size; j++) {
+//                distanceMatrix[i][j] = FogDeviceUtils.calculateDistanceBetweenDevices(fogDevices.get(i), fogDevices.get(j), locator);
+//            }
+//        }
         Random random = new Random();
         for (int i = 1; i < size - 1; i++) {
             for (int j = i + 1; j < size; j++) {
-                if (distanceMatrix[i][j] < Config.CLUSTER_DISTANCE_THRESHOLD) {
+                if (true) {
                     FogDevice deviceI = fogDevices.get(i);
                     FogDevice deviceJ = fogDevices.get(j);
                     deviceI.getClusterMembers().add(deviceJ.getId());

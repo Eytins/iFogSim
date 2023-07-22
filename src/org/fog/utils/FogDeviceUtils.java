@@ -132,6 +132,15 @@ public class FogDeviceUtils {
         return maxId;
     }
 
+    public static int getIndexOfFogDeviceById(List<FogDevice> fogDevices, int id) {
+        for (int i = 0; i < fogDevices.size(); i++) {
+            if (fogDevices.get(i).getId() == id) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
     private static final double EARTH_RADIUS = 6371000; // Earth's radius in meters
 
     /**

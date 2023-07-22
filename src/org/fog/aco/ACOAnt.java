@@ -27,15 +27,18 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
 
     private final int numberOfNodes;
 
-    public ACOAnt(int numberOfNodes) {
+    private final int indexOfFirstNode;
+
+    public ACOAnt(int numberOfNodes, int indexOfFirstNode) {
         this.numberOfNodes = numberOfNodes;
+        this.indexOfFirstNode = indexOfFirstNode;
         this.setSolution(new FogDevice[numberOfNodes]);
     }
 
     @Override
     public void clear() {
         super.clear();
-        this.initialReference = new Random().nextInt(numberOfNodes);
+        this.initialReference = indexOfFirstNode;
     }
 
     /**

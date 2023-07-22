@@ -17,6 +17,11 @@ public class ACONodeSelection extends AntPolicy<FogDevice, ACOEnvironment> {
 
     @Override
     public boolean applyPolicy(ACOEnvironment environment, ConfigurationProvider configurationProvider) {
+        if (getAnt().getCurrentIndex() == 0) {
+            getAnt().visitNode(environment.getFogDevices().get(environment.getIndexOfStartNode()));
+            return true;
+        }
+
         Random random = new Random();
         FogDevice nextNode = null;
 

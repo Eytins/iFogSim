@@ -16,6 +16,8 @@ public class ACOEnvironment extends Environment {
 
     private final int idOfStartNode;
 
+    private final int indexOfStartNode;
+
     private final int idOfEndNode;
 
     private final int numOfServices;
@@ -26,11 +28,12 @@ public class ACOEnvironment extends Environment {
 
     public ACOEnvironment(double[][] problemRepresentation,
                           List<FogDevice> fogDevices,
-                          int idOfStartNode, int idOfEndNode,
+                          int idOfStartNode, int indexOfStartNode, int idOfEndNode,
                           int numOfServices) throws InvalidInputException {
         super(problemRepresentation);
         this.fogDevices = fogDevices;
         this.idOfStartNode = idOfStartNode;
+        this.indexOfStartNode = indexOfStartNode;
         this.idOfEndNode = idOfEndNode;
         this.numOfServices = numOfServices;
         this.fogDevicesMap = FogDeviceUtils.fogDeviceListToMap(fogDevices);
@@ -52,6 +55,10 @@ public class ACOEnvironment extends Environment {
 
     public int getIdOfEndNode() {
         return idOfEndNode;
+    }
+
+    public int getIndexOfStartNode() {
+        return indexOfStartNode;
     }
 
     public int getNumOfServices() {

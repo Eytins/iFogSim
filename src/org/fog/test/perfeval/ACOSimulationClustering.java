@@ -388,7 +388,7 @@ public class ACOSimulationClustering {
         double[][] symbolicProblemRepresentation = new double[1][1];
         List<FogDevice> devices = fogDevices;
         devices.remove(0);
-        ACOEnvironment environment = new ACOEnvironment(symbolicProblemRepresentation, devices, idOfStartNode, idOfEndNode, numOfServices);
+        ACOEnvironment environment = new ACOEnvironment(symbolicProblemRepresentation, devices, idOfStartNode, FogDeviceUtils.getIndexOfFogDeviceById(fogDevices, idOfStartNode), idOfEndNode, numOfServices);
         ACOProblemConfiguration configuration = new ACOProblemConfiguration(environment);
         AntColony<FogDevice, ACOEnvironment> colony = getAntColony(configuration);
         AcoProblemSolver<FogDevice, ACOEnvironment> solver = new AcoProblemSolver<>();
@@ -425,7 +425,7 @@ public class ACOSimulationClustering {
         return new AntColony<FogDevice, ACOEnvironment>(configurationProvider.getNumberOfAnts()) {
             @Override
             protected Ant<FogDevice, ACOEnvironment> createAnt(ACOEnvironment environment) {
-                return new ACOAnt(environment.getFogDevices().size());
+                return new ACOAnt(environment.getFogDevices().size(), environment.getIndexOfStartNode());
             }
         };
     }

@@ -377,7 +377,7 @@ public class ACO_RandomMobility_Clustering2 {
         double[][] symbolicProblemRepresentation = new double[1][1];
         List<FogDevice> devices = fogDevices;
         devices.remove(0);
-        ACOEnvironment environment = new ACOEnvironment(symbolicProblemRepresentation, devices, idOfStartNode, idOfEndNode, numOfServices);
+        ACOEnvironment environment = new ACOEnvironment(symbolicProblemRepresentation, devices, idOfStartNode, FogDeviceUtils.getIndexOfFogDeviceById(fogDevices, idOfStartNode), idOfEndNode, numOfServices);
         ACOProblemConfiguration configuration = new ACOProblemConfiguration(environment);
         AntColony<FogDevice, ACOEnvironment> colony = getAntColony(configuration);
         AcoProblemSolver<FogDevice, ACOEnvironment> solver = new AcoProblemSolver<>();
@@ -388,13 +388,23 @@ public class ACO_RandomMobility_Clustering2 {
 
         solver.getAntColony().addAntPolicies(new ACONodeSelection());
         solver.solveProblem();
+
+        FogDevice[] bestSolution = solver.getBestSolution();
+
+        System.out.println("Best Solution count: " + bestSolution.length);
+        System.out.println("First solution: " + bestSolution[0].getId()
+                + ", " + bestSolution[0].getName() + ", First node: " + idOfStartNode);
+
+        // TODO: If want to check the last component in the solution, find the last item in the array that is not null.
+        // System.out.println("Last solution: " + bestSolution[bestSolution.length - 1]);
+
     }
 
     public static AntColony<FogDevice, ACOEnvironment> getAntColony(final ConfigurationProvider configurationProvider) {
         return new AntColony<FogDevice, ACOEnvironment>(configurationProvider.getNumberOfAnts()) {
             @Override
             protected Ant<FogDevice, ACOEnvironment> createAnt(ACOEnvironment environment) {
-                return new ACOAnt(environment.getFogDevices().size());
+                return new ACOAnt(environment.getFogDevices().size(), environment.getIndexOfStartNode());
             }
         };
     }
