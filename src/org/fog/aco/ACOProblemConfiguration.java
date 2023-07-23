@@ -31,7 +31,7 @@ public class ACOProblemConfiguration implements ConfigurationProvider {
 
     @Override
     public int getNumberOfAnts() {
-        return 100;
+        return 50;
     }
 
     @Override
@@ -41,7 +41,7 @@ public class ACOProblemConfiguration implements ConfigurationProvider {
 
     @Override
     public int getNumberOfIterations() {
-        return 100;
+        return 1000;
     }
 
     @Override

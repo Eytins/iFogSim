@@ -58,10 +58,8 @@ public class ACOAnt extends Ant<FogDevice, ACOEnvironment> {
         if (getCurrentIndex() == Integer.MIN_VALUE) {
             return true;
         }
-        if (getCurrentIndex() == 0) {
-            return false;
-        }
-        return (getSolution()[getCurrentIndex() - 1].getId() == acoEnvironment.getIdOfEndNode());
+        return (getCurrentIndex() >= acoEnvironment.getNumOfServices() - 1)
+                && (getSolution()[getCurrentIndex() - 1].getId() == acoEnvironment.getIdOfEndNode());
     }
 
     /**

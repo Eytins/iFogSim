@@ -6,9 +6,7 @@ import org.fog.mobilitydata.DataParser;
 import org.fog.mobilitydata.Location;
 import org.fog.placement.LocationHandler;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class FogDeviceUtils {
     /**
@@ -171,4 +169,45 @@ public class FogDeviceUtils {
 
         return EARTH_RADIUS * c;
     }
+
+    public static LinkedHashMap<FogDevice, Double> sortMapByValueDescending(Map<FogDevice, Double> unsortedMap) {
+        // Convert the Map to a List of Map.Entry objects
+        List<Map.Entry<FogDevice, Double>> list = new ArrayList<>(unsortedMap.entrySet());
+
+        // Use Collections.sort with a custom Comparator to sort the list based on values
+        Collections.sort(list, new Comparator<Map.Entry<FogDevice, Double>>() {
+            public int compare(Map.Entry<FogDevice, Double> o1, Map.Entry<FogDevice, Double> o2) {
+                // Sort in descending order (from big to small)
+                return o2.getValue().compareTo(o1.getValue());
+            }
+        });
+
+        // Convert the sorted list back to a Map
+        LinkedHashMap<FogDevice, Double> sortedMap = new LinkedHashMap<>();
+        for (Map.Entry<FogDevice, Double> entry : list) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedMap;
+    }
+
+    public static <K, V> K getRandomKeyFromMap(Map<K, V> map) {
+        if (map.isEmpty()) {
+            throw new IllegalArgumentException("Map is empty. Cannot choose a random key.");
+        }
+
+        // Generate a random index within the range of the map size
+        int randomIndex = new Random().nextInt(map.size());
+
+        // Access the key at the randomly generated index
+        Iterator<K> iterator = map.keySet().iterator();
+        K randomKey = null;
+        for (int i = 0; i <= randomIndex; i++) {
+            randomKey = iterator.next();
+        }
+
+        return randomKey;
+    }
+
+
 }

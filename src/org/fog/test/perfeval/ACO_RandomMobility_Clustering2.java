@@ -153,7 +153,7 @@ public class ACO_RandomMobility_Clustering2 {
             int startNodeInstanceId = FogDeviceUtils.getInstanceIdByDataId(startNode.getKey(), locator);
             int endNodeInstanceId = FogDeviceUtils.getInstanceIdByDataId(endNode.getKey(), locator);
 
-            startACO(startNodeInstanceId, endNodeInstanceId, 10);
+            startACO(startNodeInstanceId, endNodeInstanceId, 5);
 
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
 
@@ -403,10 +403,6 @@ public class ACO_RandomMobility_Clustering2 {
         System.out.println("Best Solution count: " + list.size());
         System.out.println("First solution: " + list.get(0).getId() + ", First node: " + idOfStartNode);
         System.out.println("Last solution: " + list.get(list.size() - 1).getId() + ", Last node: " + idOfEndNode);
-
-        // TODO: If want to check the last component in the solution, find the last item in the array that is not null.
-        // System.out.println("Last solution: " + bestSolution[bestSolution.length - 1]);
-
     }
 
     public static AntColony<FogDevice, ACOEnvironment> getAntColony(final ConfigurationProvider configurationProvider) {
