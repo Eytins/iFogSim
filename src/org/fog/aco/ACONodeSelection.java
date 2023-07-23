@@ -53,6 +53,31 @@ public class ACONodeSelection extends AntPolicy<FogDevice, ACOEnvironment> {
         }
 
         return false;
+
+
+//        Iterator<Map.Entry<FogDevice, Double>> componentWithProbabilitiesIterator = componentsWithProbabilities
+//                .entrySet().iterator();
+//
+//        while (componentWithProbabilitiesIterator.hasNext()) {
+//            Map.Entry<FogDevice, Double> componentWithProbability = componentWithProbabilitiesIterator
+//                    .next();
+//
+//            Double probability = componentWithProbability.getValue();
+//            if (probability.isNaN()) {
+//                throw new ConfigurationException("The probability for component " + componentWithProbability.getKey() +
+//                        " is not a number.");
+//            }
+//
+//            total += probability;
+//
+//            if (total >= value) {
+//                nextNode = componentWithProbability.getKey();
+//                getAnt().visitNode(nextNode);
+//                return true;
+//            }
+//        }
+//
+//        return false;
     }
 
     /**
