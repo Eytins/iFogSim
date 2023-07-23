@@ -24,4 +24,6 @@ public class Config {
 	public static double clusteringLatency = 2.0; //milisecond
 
 	public static final int TRANSMISSION_START_DELAY = 50;
+
+	public static final double EXPLORE_PROMISE_RATIO = 0.5;
 }

@@ -7,6 +7,8 @@ import isula.aco.Environment;
 import isula.aco.exception.ConfigurationException;
 import isula.aco.exception.SolutionConstructionException;
 import org.fog.entities.FogDevice;
+import org.fog.utils.Config;
+import org.fog.utils.FogDeviceUtils;
 
 import java.util.*;
 
@@ -37,25 +39,17 @@ public class ACONodeSelection extends AntPolicy<FogDevice, ACOEnvironment> {
             return true;
         }
 
-        Iterator<Map.Entry<FogDevice, Double>> componentWithProbabilitiesIterator = componentsWithProbabilities
-                .entrySet().iterator();
-        while (componentWithProbabilitiesIterator.hasNext()) {
-            Map.Entry<FogDevice, Double> componentWithProbability = componentWithProbabilitiesIterator
-                    .next();
+        LinkedHashMap<FogDevice, Double> sortedMap = FogDeviceUtils.sortMapByValueDescending(componentsWithProbabilities);
 
-            Double probability = componentWithProbability.getValue();
-            if (probability.isNaN()) {
-                throw new ConfigurationException("The probability for component " + componentWithProbability.getKey() +
-                        " is not a number.");
-            }
-
-            total += probability;
-
-            if (total >= value) {
-                nextNode = componentWithProbability.getKey();
-                getAnt().visitNode(nextNode);
+        if (random.nextDouble() > Config.EXPLORE_PROMISE_RATIO) {
+            for (Map.Entry<FogDevice, Double> fogDeviceDoubleEntry : sortedMap.entrySet()) {
+                getAnt().visitNode(fogDeviceDoubleEntry.getKey());
                 return true;
             }
+        } else {
+            FogDevice fogDevice = FogDeviceUtils.getRandomKeyFromMap(componentsWithProbabilities);
+            getAnt().visitNode(fogDevice);
+            return true;
         }
 
         return false;
