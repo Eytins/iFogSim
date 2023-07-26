@@ -437,7 +437,7 @@ public class MicroservicesController extends SimEntity {
     protected void printClusterConnections() {
         StringBuilder clusterString = new StringBuilder();
         clusterString.append("Cluster formation : ");
-        // <ParentNode,ClusterNodes> Assuming than clusters are formed among nodes with same parent
+        // <ParentNode,ClusterNodes> Assuming that clusters are formed among nodes with same parent
         HashMap<String, List<MicroserviceFogDevice>> clusters = new HashMap<>();
         for (FogDevice f : fogDevices) {
             MicroserviceFogDevice cDevice = (MicroserviceFogDevice) f;

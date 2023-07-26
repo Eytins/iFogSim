@@ -57,7 +57,18 @@ public class MicroservicesMobilityClusteringController2 extends MicroservicesCon
         connectWithLatencies();
 
         if (Config.ENABLE_STATIC_CLUSTERING) {
-            createClusterConnections(fogDevices, locator);
+
+            List<FogDevice> gateways = new LinkedList<>();
+            List<FogDevice> proxies = new LinkedList<>();
+            for (FogDevice device : fogDevices) {
+                if (device.getLevel() == 1) {
+                    proxies.add(device);
+                } else if (device.getLevel() == 2) {
+                    gateways.add(device);
+                }
+            }
+            createClusterConnections(proxies, locator);
+            createClusterConnections(gateways, locator);
         }
         printClusterConnections();
 
@@ -66,33 +77,31 @@ public class MicroservicesMobilityClusteringController2 extends MicroservicesCon
     }
 
     protected static void createClusterConnections(List<FogDevice> fogDevices, LocationHandler locator) {
-        int maxID = FogDeviceUtils.getMaxFogDeviceID(fogDevices);
-        double[][] distanceMatrix = new double[maxID + 1][maxID + 1];
         int size = fogDevices.size();
-//        for (int i = 1; i < size - 1; i++) {
-//            for (int j = i + 1; j < size; j++) {
-//                distanceMatrix[i][j] = FogDeviceUtils.calculateDistanceBetweenDevices(fogDevices.get(i), fogDevices.get(j), locator);
-//            }
-//        }
+        double distance;
         Random random = new Random();
         for (int i = 1; i < size - 1; i++) {
             for (int j = i + 1; j < size; j++) {
-                if (true) {
+
+                distance = FogDeviceUtils.calculateDistanceBetweenDevices(fogDevices.get(i), fogDevices.get(j), locator);
+                if (distance < Config.CLUSTER_DISTANCE_THRESHOLD) {
                     FogDevice deviceI = fogDevices.get(i);
                     FogDevice deviceJ = fogDevices.get(j);
                     deviceI.getClusterMembers().add(deviceJ.getId());
                     deviceJ.getClusterMembers().add(deviceI.getId());
+                    deviceI.setIsInCluster(true);
+                    deviceJ.setIsInCluster(true);
                     if (deviceI.getClusterMembersToLatencyMap() == null) {
                         deviceI.setClusterMembersToLatencyMap(new HashMap<>());
-                        deviceI.getClusterMembersToLatencyMap().put(deviceJ.getId(), distanceMatrix[i][j] / 5 + random.nextDouble() * 5);
+                        deviceI.getClusterMembersToLatencyMap().put(deviceJ.getId(), distance / 5 + random.nextDouble() * 5);
                     } else {
-                        deviceI.getClusterMembersToLatencyMap().put(deviceJ.getId(), distanceMatrix[i][j] / 5 + random.nextDouble() * 5);
+                        deviceI.getClusterMembersToLatencyMap().put(deviceJ.getId(), distance / 5 + random.nextDouble() * 5);
                     }
                     if (deviceJ.getClusterMembersToLatencyMap() == null) {
                         deviceJ.setClusterMembersToLatencyMap(new HashMap<>());
-                        deviceJ.getClusterMembersToLatencyMap().put(deviceI.getId(), distanceMatrix[i][j] / 5 + random.nextDouble() * 5);
+                        deviceJ.getClusterMembersToLatencyMap().put(deviceI.getId(), distance / 5 + random.nextDouble() * 5);
                     } else {
-                        deviceJ.getClusterMembersToLatencyMap().put(deviceI.getId(), distanceMatrix[i][j] / 5 + random.nextDouble() * 5);
+                        deviceJ.getClusterMembersToLatencyMap().put(deviceI.getId(), distance / 5 + random.nextDouble() * 5);
                     }
                 }
             }

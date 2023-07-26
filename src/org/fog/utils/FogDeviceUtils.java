@@ -5,7 +5,9 @@ import org.fog.entities.FogDevice;
 import org.fog.mobilitydata.DataParser;
 import org.fog.mobilitydata.Location;
 import org.fog.placement.LocationHandler;
+import org.fog.placement.MicroservicesMobilityClusteringController2;
 
+import java.io.*;
 import java.util.*;
 
 public class FogDeviceUtils {
@@ -208,6 +210,4 @@ public class FogDeviceUtils {
 
         return randomKey;
     }
-
-
 }

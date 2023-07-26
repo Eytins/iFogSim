@@ -20,7 +20,7 @@ public class Config {
 	//Dynamic Clustering
 	public static boolean ENABLE_DYNAMIC_CLUSTERING = false;
 	public static double Node_Communication_RANGE = 300.0; // In terms of meter
-	public static final int CLUSTER_DISTANCE_THRESHOLD = 1500;
+	public static final int CLUSTER_DISTANCE_THRESHOLD = 100;
 	public static double clusteringLatency = 2.0; //milisecond
 
 	public static final int TRANSMISSION_START_DELAY = 50;

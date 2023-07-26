@@ -33,15 +33,12 @@ import org.fog.placement.MicroservicesMobilityClusteringController2;
 import org.fog.placement.PlacementLogicFactory;
 import org.fog.policy.AppModuleAllocationPolicy;
 import org.fog.scheduler.StreamOperatorScheduler;
-import org.fog.utils.FogDeviceUtils;
-import org.fog.utils.FogLinearPowerModel;
-import org.fog.utils.FogUtils;
-import org.fog.utils.TimeKeeper;
+import org.fog.utils.*;
 import org.fog.utils.distribution.DeterministicDistribution;
 import org.json.simple.parser.ParseException;
 
 import javax.naming.ConfigurationException;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -131,8 +128,11 @@ public class ACO_RandomMobility_Clustering3 {
             clusterLevelIdentifier.add(2);
 
             int placementAlgo = PlacementLogicFactory.CLUSTERED_MICROSERVICES_PLACEMENT;
-            MicroservicesMobilityClusteringController2 microservicesController = new MicroservicesMobilityClusteringController2("controller", fogDevices, sensors, appList, clusterLevelIdentifier, 2.0, placementAlgo, locator);
-//            ClusteringController microservicesController = new ClusteringController("controller", fogDevices, sensors, actuators, locator, clusterLevelIdentifier);
+            MicroservicesMobilityClusteringController2 microservicesController = new MicroservicesMobilityClusteringController2(
+                    "controller", fogDevices, sensors, appList, clusterLevelIdentifier, 2.0, placementAlgo, locator);
+
+            SerializableFogDevices serializableFogDevices = new SerializableFogDevices(fogDevices);
+            saveFogDevicesToFile(serializableFogDevices, "fogDevices.save");
 
             // generate placement requests
             List<PlacementRequest> placementRequests = new ArrayList<>();
@@ -428,4 +428,53 @@ public class ACO_RandomMobility_Clustering3 {
             }
         };
     }
+
+    private static void saveControllerClassToFile(MicroservicesMobilityClusteringController2 controller, String fileName) {
+        try (FileOutputStream fileOut = new FileOutputStream(fileName);
+             ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)) {
+            objectOut.writeObject(controller);
+            System.out.println("Controller instance has been saved to " + fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static MicroservicesMobilityClusteringController2 loadControllerClassFromFile(String fileName) {
+        try (FileInputStream fileIn = new FileInputStream(fileName);
+             ObjectInputStream objectIn = new ObjectInputStream(fileIn)) {
+
+            MicroservicesMobilityClusteringController2 controller = (MicroservicesMobilityClusteringController2) objectIn.readObject();
+            System.out.println("Controller instance has been loaded from " + fileName);
+            return controller;
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static void saveFogDevicesToFile(SerializableFogDevices fogDevices, String fileName) {
+        try (FileOutputStream fileOut = new FileOutputStream(fileName);
+             ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)) {
+            objectOut.writeObject(fogDevices);
+            System.out.println("Controller instance has been saved to " + fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static SerializableFogDevices loadFogDevicesFromFile(String fileName) {
+        try (FileInputStream fileIn = new FileInputStream(fileName);
+             ObjectInputStream objectIn = new ObjectInputStream(fileIn)) {
+
+            SerializableFogDevices fogDevices = (SerializableFogDevices) objectIn.readObject();
+            System.out.println("Controller instance has been loaded from " + fileName);
+            return fogDevices;
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+
 }

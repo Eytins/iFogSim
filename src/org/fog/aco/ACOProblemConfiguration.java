@@ -41,7 +41,7 @@ public class ACOProblemConfiguration implements ConfigurationProvider {
 
     @Override
     public int getNumberOfIterations() {
-        return 1000;
+        return 200;
     }
 
     @Override
