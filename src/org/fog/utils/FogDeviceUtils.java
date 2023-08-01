@@ -1,7 +1,10 @@
 package org.fog.utils;
 
 import org.apache.commons.math3.util.Pair;
+import org.fog.application.AppModule;
+import org.fog.application.Application;
 import org.fog.entities.FogDevice;
+import org.fog.entities.MicroserviceFogDevice;
 import org.fog.mobilitydata.DataParser;
 import org.fog.mobilitydata.Location;
 import org.fog.placement.LocationHandler;
@@ -10,6 +13,9 @@ import org.fog.placement.MicroservicesMobilityClusteringController2;
 import java.io.*;
 import java.util.*;
 
+/**
+ *
+ */
 public class FogDeviceUtils {
     /**
      * Get all nodes which locate near the user's route (including repetition)
@@ -209,5 +215,148 @@ public class FogDeviceUtils {
         }
 
         return randomKey;
+    }
+
+    /**
+     * Get the indirect latency from one fog device to another
+     * @param sender sender
+     * @param receiver receiver
+     * @return the latency
+     */
+    public static double getIndirectLatency(FogDevice sender, FogDevice receiver, Map<Integer, FogDevice> fogDeviceMap) {
+        Map<Integer, Double> senderChildToLatencyMap = sender.getChildToLatencyMap();
+        int receiverId = receiver.getId();
+
+        int senderLevel = sender.getLevel();
+        int receiverLevel = receiver.getLevel();
+
+        if (senderLevel == 0) {
+            if (receiverLevel == 1) {
+                return senderChildToLatencyMap.get(receiverId);
+            } else if (receiverLevel == 2) {
+                for (Map.Entry<Integer, Double> entry : senderChildToLatencyMap.entrySet()) {
+                    FogDevice proxy = fogDeviceMap.get(entry.getKey());
+                    Map<Integer, Double> childToLatencyMap = proxy.getChildToLatencyMap();
+                    if (childToLatencyMap.containsKey(receiverId)) {
+                        return entry.getValue() + childToLatencyMap.get(receiverId);
+                    }
+                }
+            } else {
+                return Double.NaN;
+            }
+        } else if (senderLevel == 1) {
+            if (receiverLevel == 0) {
+                return sender.getUplinkLatency();
+            } else if (receiverLevel == 1) {
+                FogDevice cloud = fogDeviceMap.get(sender.getParentId());
+                Map<Integer, Double> childToLatencyMap = cloud.getChildToLatencyMap();
+                if (childToLatencyMap.containsKey(receiverId)) {
+                    return childToLatencyMap.get(receiverId) + sender.getUplinkLatency();
+                }
+            } else if (receiverLevel == 2) {
+                if (senderChildToLatencyMap.containsKey(receiverId)) {
+                    return senderChildToLatencyMap.get(receiverId);
+                } else {
+                    FogDevice cloud = fogDeviceMap.get(sender.getParentId());
+                    Map<Integer, Double> cloudChildToLatencyMap = cloud.getChildToLatencyMap();
+                    for (Map.Entry<Integer, Double> entry : cloudChildToLatencyMap.entrySet()) {
+                        FogDevice proxy = fogDeviceMap.get(entry.getKey());
+                        Map<Integer, Double> proxyChildToLatencyMap = proxy.getChildToLatencyMap();
+                        if (proxyChildToLatencyMap.containsKey(receiverId)) {
+                            return sender.getUplinkLatency() + entry.getValue() + proxyChildToLatencyMap.get(receiverId);
+                        }
+                    }
+                }
+            } else {
+                return Double.NaN;
+            }
+        } else if (senderLevel == 2) {
+            if (receiverLevel == 0) {
+                return sender.getUplinkLatency() + fogDeviceMap.get(sender.getParentId()).getUplinkLatency();
+            } else if (receiverLevel == 1) {
+                if (sender.getParentId() == receiverId) {
+                    return sender.getUplinkLatency();
+                } else {
+                    FogDevice senderParent = fogDeviceMap.get(sender.getParentId());
+                    FogDevice cloud = fogDeviceMap.get(senderParent.getParentId());
+                    Map<Integer, Double> cloudChildToLatencyMap = cloud.getChildToLatencyMap();
+                    for (Map.Entry<Integer, Double> entry : cloudChildToLatencyMap.entrySet()) {
+                        if (receiverId == entry.getKey()) {
+                            return sender.getUplinkLatency() + senderParent.getUplinkLatency() + entry.getValue();
+                        }
+                    }
+                }
+            } else if (receiverLevel == 2) {
+                FogDevice senderParent = fogDeviceMap.get(sender.getParentId());
+                Map<Integer, Double> senderParentChildToLatencyMap = senderParent.getChildToLatencyMap();
+                for (Map.Entry<Integer, Double> entry : senderParentChildToLatencyMap.entrySet()) {
+                    if (entry.getKey() == receiverId) {
+                        return sender.getUplinkLatency() + entry.getValue();
+                    }
+                }
+                FogDevice cloud = fogDeviceMap.get(senderParent.getParentId());
+                Map<Integer, Double> cloudChildToLatencyMap = cloud.getChildToLatencyMap();
+                for (Map.Entry<Integer, Double> entry : cloudChildToLatencyMap.entrySet()) {
+                    FogDevice proxy = fogDeviceMap.get(entry.getKey());
+                    Map<Integer, Double> proxyChildToLatencyMap = proxy.getChildToLatencyMap();
+                    for (Map.Entry<Integer, Double> innerEntry : proxyChildToLatencyMap.entrySet()) {
+                        if (innerEntry.getKey() == receiverId) {
+                            return sender.getUplinkLatency() + senderParent.getUplinkLatency()
+                                    +entry.getValue() + innerEntry.getValue();
+                        }
+                    }
+
+                }
+            } else {
+                return Double.NaN;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Create the matrix that contains the latency info of all devices
+     * @param fogDevices All fog devices
+     * @return the matrix which the first index represents the id of sender, the second represents the receiver
+     */
+    public static double[][] createLatencyMatrixOfAllDevices(List<FogDevice> fogDevices) {
+        int maxFogDeviceID = getMaxFogDeviceID(fogDevices);
+        Map<Integer, FogDevice> fogDeviceMap = fogDeviceListToMap(fogDevices);
+        double[][] result = new double[maxFogDeviceID + 1][maxFogDeviceID + 1];
+
+        for (int i = 0; i < result.length; i++) {
+            for (int j = 0; j < result.length; j++) {
+                if (i == 4 && j == 7) {
+                    System.out.println("A");
+                }
+                if (i == j) {
+                    result[i][j] = Double.NaN;
+                    continue;
+                }
+                FogDevice fogDeviceI = fogDeviceMap.getOrDefault(i, null);
+                FogDevice fogDeviceJ = fogDeviceMap.getOrDefault(j, null);
+                if (fogDeviceI == null || fogDeviceJ == null) {
+                    result[i][j] = Double.NaN;
+                    continue;
+                }
+                result[i][j] = getIndirectLatency(fogDeviceI, fogDeviceJ, fogDeviceMap);
+            }
+        }
+
+        return result;
+    }
+
+    public static List<FogDevice> getFogDevicesWithCapability(List<FogDevice> fogDevices, Application application) {
+        int minRam = Integer.MIN_VALUE;
+        for (AppModule module : application.getModules()) {
+            minRam = Math.min(module.getRam(), minRam);
+        }
+        List<FogDevice> result = new ArrayList<>();
+        for (FogDevice fogDevice : fogDevices) {
+            if (fogDevice.getHost().getTotalMips() > 0) {
+                // TODO: continue
+            }
+        }
+        return null;
     }
 }
