@@ -1,10 +1,13 @@
 package org.fog.utils;
 
 import org.apache.commons.math3.util.Pair;
+import org.fog.application.AppEdge;
 import org.fog.application.AppModule;
 import org.fog.application.Application;
 import org.fog.entities.FogDevice;
 import org.fog.entities.MicroserviceFogDevice;
+import org.fog.entities.Sensor;
+import org.fog.entities.Tuple;
 import org.fog.mobilitydata.DataParser;
 import org.fog.mobilitydata.Location;
 import org.fog.placement.LocationHandler;
@@ -19,9 +22,10 @@ import java.util.*;
 public class FogDeviceUtils {
     /**
      * Get all nodes which locate near the user's route (including repetition)
+     *
      * @param dataObject dataObject
-     * @param locator LocationHandler
-     * @return Map<Time, Map<FogDeviceResID, Location>>
+     * @param locator    LocationHandler
+     * @return Map<Time, Map < FogDeviceResID, Location>>
      */
     public static Map<Double, Map<String, Location>> getNodesNearRoute(DataParser dataObject, LocationHandler locator) {
         Map<Double, Map<String, Location>> res = new HashMap<>();
@@ -53,6 +57,7 @@ public class FogDeviceUtils {
 
     /**
      * Get the start node near the user's route (Time is 0.0)
+     *
      * @param allNodes All nodes
      * @return The start node
      */
@@ -67,6 +72,7 @@ public class FogDeviceUtils {
 
     /**
      * Get the end node near the user's route (Time is max)
+     *
      * @param allNodes All nodes
      * @return The end node
      */
@@ -85,6 +91,7 @@ public class FogDeviceUtils {
 
     /**
      * Get the Integer ID of FogDevice By its String Resource ID
+     *
      * @param dataId resID
      * @return Instance ID
      */
@@ -100,6 +107,7 @@ public class FogDeviceUtils {
 
     /**
      * Transfer Fog Device list to map
+     *
      * @param list Fog Device list
      * @return map whose key is Fog Device ID, value is FogDevice
      */
@@ -113,8 +121,9 @@ public class FogDeviceUtils {
 
     /**
      * Create the matrix which contains the map of latency between Fog Devices.
+     *
      * @param fogDevices Fog Devices
-     * @return Map<SendDeviceID, Map<ReceiveDeviceID, Latency>>
+     * @return Map<SendDeviceID, Map < ReceiveDeviceID, Latency>>
      */
     public static Map<Integer, Map<Integer, Double>> createLatencyMatrix(List<FogDevice> fogDevices) {
         Map<Integer, Map<Integer, Double>> matrix = new HashMap<>();
@@ -165,7 +174,7 @@ public class FogDeviceUtils {
         return calculateDistance(device1Latitude, device1Longitude, device2Latitude, device2Longitude);
     }
 
-    private static double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    public static double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
         double latDistance = Math.toRadians(lat2 - lat1);
         double lonDistance = Math.toRadians(lon2 - lon1);
 
@@ -219,7 +228,8 @@ public class FogDeviceUtils {
 
     /**
      * Get the indirect latency from one fog device to another
-     * @param sender sender
+     *
+     * @param sender   sender
      * @param receiver receiver
      * @return the latency
      */
@@ -302,7 +312,7 @@ public class FogDeviceUtils {
                     for (Map.Entry<Integer, Double> innerEntry : proxyChildToLatencyMap.entrySet()) {
                         if (innerEntry.getKey() == receiverId) {
                             return sender.getUplinkLatency() + senderParent.getUplinkLatency()
-                                    +entry.getValue() + innerEntry.getValue();
+                                    + entry.getValue() + innerEntry.getValue();
                         }
                     }
 
@@ -316,6 +326,7 @@ public class FogDeviceUtils {
 
     /**
      * Create the matrix that contains the latency info of all devices
+     *
      * @param fogDevices All fog devices
      * @return the matrix which the first index represents the id of sender, the second represents the receiver
      */
@@ -326,9 +337,6 @@ public class FogDeviceUtils {
 
         for (int i = 0; i < result.length; i++) {
             for (int j = 0; j < result.length; j++) {
-                if (i == 4 && j == 7) {
-                    System.out.println("A");
-                }
                 if (i == j) {
                     result[i][j] = Double.NaN;
                     continue;
@@ -339,24 +347,107 @@ public class FogDeviceUtils {
                     result[i][j] = Double.NaN;
                     continue;
                 }
-                result[i][j] = getIndirectLatency(fogDeviceI, fogDeviceJ, fogDeviceMap);
+                if (fogDeviceI.getName().startsWith("mobile") || fogDeviceJ.getName().startsWith("mobile")) {
+                    result[i][j] = Double.NaN;
+                    continue;
+                }
+                result[i][j] = 1 / getIndirectLatency(fogDeviceI, fogDeviceJ, fogDeviceMap);
             }
         }
 
         return result;
     }
 
-    public static List<FogDevice> getFogDevicesWithCapability(List<FogDevice> fogDevices, Application application) {
-        int minRam = Integer.MIN_VALUE;
-        for (AppModule module : application.getModules()) {
-            minRam = Math.min(module.getRam(), minRam);
-        }
-        List<FogDevice> result = new ArrayList<>();
-        for (FogDevice fogDevice : fogDevices) {
-            if (fogDevice.getHost().getTotalMips() > 0) {
-                // TODO: continue
+
+    /**
+     * Gets all sensors associated with fog-device <b>device</b>
+     * @param device The fog device
+     * @return map from sensor type to number of such sensors
+     */
+    public static Map<String, Integer> getAssociatedSensors(FogDevice device, List<Sensor> sensors) {
+        Map<String, Integer> endpoints = new HashMap<>();
+        for(Sensor sensor : sensors){
+            if(sensor.getGatewayDeviceId()==device.getId()){
+                if(!endpoints.containsKey(sensor.getTupleType()))
+                    endpoints.put(sensor.getTupleType(), 0);
+                endpoints.put(sensor.getTupleType(), endpoints.get(sensor.getTupleType())+1);
             }
         }
-        return null;
+        return endpoints;
+    }
+
+    /**
+     * Method to create a copy of a 2D double array
+     *
+     * @param original Original array
+     * @return New array
+     */
+    public static double[][] copy2DArray(double[][] original) {
+        int rows = original.length;
+        int cols = original[0].length;
+        double[][] copy = new double[rows][cols];
+        for (int i = 0; i < rows; i++) {
+            System.arraycopy(original[i], 0, copy[i], 0, cols);
+        }
+        return copy;
+    }
+
+    /**
+     * Get the current time after running placed modules on devices
+     * <p>
+     * In normal situation, the size of two lists should be the same.
+     *
+     * @param modules       Modules been placed
+     * @param fogDevices    Devices that have been used to place modules
+     * @param latencyMatrix The matrix that saves the latency information
+     *                      between any two devices
+     * @return Pasted time
+     */
+    public static double getCurTimeAfterRunModulesOnDevices(List<AppModule> modules,
+                                                            List<FogDevice> fogDevices,
+                                                            double[][] latencyMatrix) {
+        double result = 0.0;
+        for (int i = 0; i < modules.size(); i++) {
+            result += modules.get(i).getSize() / fogDevices.get(i).getUplinkBandwidth();
+        }
+        for (int i = 1; i < fogDevices.size(); i++) {
+            result += latencyMatrix[fogDevices.get(i - 1).getId()][fogDevices.get(i).getId()];
+        }
+        return result;
+    }
+
+    public static List<FogDevice> getDevicesSatisfyModuleRequirement(List<FogDevice> fogDevices, AppModule module) {
+        List<FogDevice> result = new ArrayList<>();
+        for (FogDevice fogDevice : fogDevices) {
+            if (fogDevice.getHost().getRam() > module.getRam()) {
+                result.add(fogDevice);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * From all devices that satisfy the requirement of first module,
+     * choose the closet one with user's init location
+     * @param fogDevices All fog devices
+     * @param application application
+     * @param locator locator
+     * @return the Fog Device
+     */
+    public static FogDevice getInitialFogDevice(List<FogDevice> fogDevices, Application application, LocationHandler locator) {
+        List<FogDevice> satisfiedDevices = getDevicesSatisfyModuleRequirement(fogDevices, application.getModules().get(0));
+        Location userInitLocation = locator.dataObject.usersLocation.get(Config.USER_NAME).get(0.0);
+        FogDevice result = null;
+        double minDistance = Double.MAX_VALUE;
+        for (int i = 0; i < satisfiedDevices.size(); i++) {
+            Location location = locator.dataObject.resourceLocationData.get(locator.instanceToDataId.get(satisfiedDevices.get(i).getId()));
+            double distance = calculateDistance(userInitLocation.latitude, userInitLocation.longitude,
+                    location.latitude, location.latitude);
+            if (distance < minDistance) {
+                minDistance = distance;
+                result = satisfiedDevices.get(i);
+            }
+        }
+        return result;
     }
 }

@@ -92,9 +92,6 @@ public class ACO_Simulation {
             createMobileUser(broker.getId(), appId, datasetReference);
             createFogDevices(broker.getId(), appId);
 
-
-            // TODO: beginning of ACO
-
             ModuleMapping moduleMapping = ModuleMapping.createModuleMapping(); // initializing a module mapping
 
             moduleMapping.addModuleToDevice("clientModule", "mobile_0");
@@ -102,9 +99,10 @@ public class ACO_Simulation {
             MobilityController controller = new MobilityController("master-controller", fogDevices, sensors,
                     actuators, locator);
 
-//            double[][] latencyMatrix = FogDeviceUtils.createLatencyMatrixOfAllDevices(fogDevices);
+            // Need to be placed here (after child latency map is created)
+            // double[][] latencyMatrix = FogDeviceUtils.createLatencyMatrixOfAllDevices(fogDevices);
 
-            controller.submitApplication(application, 0, (new ACOPlacementLogic(fogDevices, sensors, actuators, application, moduleMapping)));
+            controller.submitApplication(application, 0, (new ACOPlacementLogic(fogDevices, sensors, actuators, application, moduleMapping, locator)));
 
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
 
@@ -181,7 +179,7 @@ public class ACO_Simulation {
 
             for (int i = 0; i < locator.getLevelWiseResources(locator.getLevelID("Gateway")).size(); i++) {
 
-                FogDevice gateway = createFogDevice("gateway_" + i, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333);
+                FogDevice gateway = createFogDevice("gateway_" + i, 2800, 2000, 10000, 10000, 0.0, 107.339, 83.4333);
                 locator.linkDataWithInstance(gateway.getId(), locator.getLevelWiseResources(locator.getLevelID("Gateway")).get(i));
                 gateway.setParentId(locator.determineParent(gateway.getId(), References.SETUP_TIME));
                 gateway.setUplinkLatency(4);
@@ -301,7 +299,10 @@ public class ACO_Simulation {
          * Adding modules (vertices) to the application model (directed graph)
          */
         application.addAppModule("clientModule", 10); // adding module Client to the application model
-        application.addAppModule("processingModule", 10); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule1", 100); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule2", 3000); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule3", 1000); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule4", 200); // adding module Concentration Calculator to the application model
         application.addAppModule("storageModule", 10); // adding module Connector to the application model
 
         /*
@@ -311,17 +312,23 @@ public class ACO_Simulation {
             application.addAppEdge("M-SENSOR", "clientModule", 2000, 500, "M-SENSOR", Tuple.UP, AppEdge.SENSOR); // adding edge from EEG (sensor) to Client module carrying tuples of type EEG
         else
             application.addAppEdge("M-SENSOR", "clientModule", 3000, 500, "M-SENSOR", Tuple.UP, AppEdge.SENSOR);
-        application.addAppEdge("clientModule", "processingModule", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
-        application.addAppEdge("processingModule", "storageModule", 1000, 1000, "PROCESSED_DATA", Tuple.UP, AppEdge.MODULE); // adding periodic edge (period=1000ms) from Concentration Calculator to Connector module carrying tuples of type PLAYER_GAME_STATE
-        application.addAppEdge("processingModule", "clientModule", 14, 500, "ACTION_COMMAND", Tuple.DOWN, AppEdge.MODULE);  // adding edge from Concentration Calculator to Client module carrying tuples of type CONCENTRATION
+        application.addAppEdge("clientModule", "processingModule1", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule1", "processingModule2", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule2", "processingModule3", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule3", "processingModule4", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule4", "storageModule", 1000, 1000, "PROCESSED_DATA", Tuple.UP, AppEdge.MODULE); // adding periodic edge (period=1000ms) from Concentration Calculator to Connector module carrying tuples of type PLAYER_GAME_STATE
+        application.addAppEdge("processingModule4", "clientModule", 14, 500, "ACTION_COMMAND", Tuple.DOWN, AppEdge.MODULE);  // adding edge from Concentration Calculator to Client module carrying tuples of type CONCENTRATION
         application.addAppEdge("clientModule", "M-DISPLAY", 1000, 500, "ACTUATION_SIGNAL", Tuple.DOWN, AppEdge.ACTUATOR);  // adding edge from Client module to Display (actuator) carrying tuples of type SELF_STATE_UPDATE
 
         /*
          * Defining the input-output relationships (represented by selectivity) of the application modules.
          */
         application.addTupleMapping("clientModule", "M-SENSOR", "RAW_DATA", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
-        application.addTupleMapping("processingModule", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0 tuples of type SELF_STATE_UPDATE are emitted by Client module per incoming tuple of type CONCENTRATION
-        application.addTupleMapping("processingModule", "RAW_DATA", "ACTION_COMMAND", new FractionalSelectivity(1.0)); // 1.0 tuples of type CONCENTRATION are emitted by Concentration Calculator module per incoming tuple of type _SENSOR
+        application.addTupleMapping("processingModule1", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0 tuples of type SELF_STATE_UPDATE are emitted by Client module per incoming tuple of type CONCENTRATION
+        application.addTupleMapping("processingModule2", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0 tuples of type SELF_STATE_UPDATE are emitted by Client module per incoming tuple of type CONCENTRATION
+        application.addTupleMapping("processingModule3", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0 tuples of type SELF_STATE_UPDATE are emitted by Client module per incoming tuple of type CONCENTRATION
+        application.addTupleMapping("processingModule4", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0 tuples of type SELF_STATE_UPDATE are emitted by Client module per incoming tuple of type CONCENTRATION
+        application.addTupleMapping("processingModule4", "RAW_DATA", "ACTION_COMMAND", new FractionalSelectivity(1.0)); // 1.0 tuples of type CONCENTRATION are emitted by Concentration Calculator module per incoming tuple of type _SENSOR
         application.addTupleMapping("clientModule", "ACTION_COMMAND", "ACTUATION_SIGNAL", new FractionalSelectivity(1.0)); // 1.0 tuples of type GLOBAL_STATE_UPDATE are emitted by Client module per incoming tuple of type GLOBAL_GAME_STATE
 
         /*
@@ -331,7 +338,10 @@ public class ACO_Simulation {
         final AppLoop loop1 = new AppLoop(new ArrayList<String>() {{
             add("M-SENSOR");
             add("clientModule");
-            add("processingModule");
+            add("processingModule1");
+            add("processingModule2");
+            add("processingModule3");
+            add("processingModule4");
             add("clientModule");
             add("M-DISPLAY");
         }});

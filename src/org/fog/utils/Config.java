@@ -25,5 +25,7 @@ public class Config {
 
 	public static final int TRANSMISSION_START_DELAY = 50;
 
-	public static final double EXPLORE_PROMISE_RATIO = 0.5;
+	public static final double EXPLORE_PROMISE_RATIO = 0.8;
+
+	public static final String USER_NAME = "usr_1";
 }

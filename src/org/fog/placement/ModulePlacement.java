@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import isula.aco.exception.InvalidInputException;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.fog.application.AppModule;
 import org.fog.application.Application;
 import org.fog.entities.FogDevice;
+
+import javax.naming.ConfigurationException;
 
 public abstract class ModulePlacement {
 
@@ -26,7 +29,7 @@ public abstract class ModulePlacement {
 	protected Map<Integer, List<String>> modulesOnDevice;
 	protected Boolean clusteringFeature;
 
-	protected abstract void mapModules();
+	protected abstract void mapModules() throws ConfigurationException, InvalidInputException;
 
 	protected boolean canBeCreated(FogDevice fogDevice, AppModule module){
 		return fogDevice.getVmAllocationPolicy().allocateHostForVm(module);

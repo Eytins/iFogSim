@@ -139,7 +139,7 @@ public class MobilityController extends SimEntity{
 			processMobilityData();
 			break;
 		case FogEvents.MOBILITY_MANAGEMENT:
-			processMobility(ev);
+//			processMobility(ev);
 			break;
 		case FogEvents.TUPLE_FINISHED:
 			processTupleFinished(ev);
