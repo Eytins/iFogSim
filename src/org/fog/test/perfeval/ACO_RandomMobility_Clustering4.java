@@ -122,7 +122,7 @@ public class ACO_RandomMobility_Clustering4 {
             int placementAlgo = PlacementLogicFactory.CLUSTERED_MICROSERVICES_PLACEMENT;
             MicroservicesMobilityClusteringController microservicesController = new MicroservicesMobilityClusteringController("controller", fogDevices, sensors, appList, clusterLevelIdentifier, 2.0, placementAlgo, locator);
 
-            double[][] latencyMatrix = FogDeviceUtils.createLatencyMatrixOfAllDevices(fogDevices);
+//            double[][] latencyMatrix = FogDeviceUtils.createLatencyMatrixOfAllDevices(fogDevices);
 
 
 

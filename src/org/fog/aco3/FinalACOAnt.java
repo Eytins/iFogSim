@@ -77,6 +77,7 @@ public class FinalACOAnt extends Ant<FogDevice, FinalACOEnvironment> {
             FogDevice preNode = getSolution()[i - 1];
             FogDevice curNode = getSolution()[i];
             totalCost += environment.getLatencyMatrix()[preNode.getId()][curNode.getId()];
+            totalCost += getSolution()[i].getPower();
         }
         return totalCost;
     }
@@ -88,8 +89,7 @@ public class FinalACOAnt extends Ant<FogDevice, FinalACOEnvironment> {
 
     @Override
     public List<FogDevice> getNeighbourhood(FinalACOEnvironment environment) {
-        return FogDeviceUtils.getDevicesSatisfyModuleRequirement(environment.getFogDevices(),
-                environment.getApplication().getModuleByName(modulesToBePlaced.get(0)));
+        return environment.getModulesAvailableDevices().get(modulesToBePlaced.get(0));
     }
 
     @Override
@@ -140,8 +140,12 @@ public class FinalACOAnt extends Ant<FogDevice, FinalACOEnvironment> {
             result += module.getRam() / ((double) getSolution()[i].getHost().getBw() / (2 * 8000));
         }
         // Add Delay Between Devices
-        for (int i = 1; i < getSolution().length; i++) {
-            result += environment.getLatencyMatrix()[i - 1][i];
+        if (getCurrentIndex() == 1) {
+            return result;
+        } else {
+            for (int i = 1; i < getCurrentIndex(); i++) {
+                result += environment.getLatencyMatrix()[getSolution()[i - 1].getId()][getSolution()[i].getId()];
+            }
         }
         return result;
     }

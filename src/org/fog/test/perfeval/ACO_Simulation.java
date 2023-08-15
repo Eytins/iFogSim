@@ -92,18 +92,15 @@ public class ACO_Simulation {
             createMobileUser(broker.getId(), appId, datasetReference);
             createFogDevices(broker.getId(), appId);
 
-            ModuleMapping moduleMapping = ModuleMapping.createModuleMapping(); // initializing a module mapping
-
-            moduleMapping.addModuleToDevice("clientModule", "mobile_0");
 
             MobilityController controller = new MobilityController("master-controller", fogDevices, sensors,
                     actuators, locator);
 
-            // Need to be placed here (after child latency map is created)
-            // double[][] latencyMatrix = FogDeviceUtils.createLatencyMatrixOfAllDevices(fogDevices);
+            ModuleMapping moduleMapping = ModuleMapping.createModuleMapping(); // initializing a module mapping
+            moduleMapping.addModuleToDevice("clientModule", "mobile_0");
 
-            controller.submitApplication(application, 0, (new ACOPlacementLogic(fogDevices, sensors, actuators, application, moduleMapping, locator)));
-
+            controller.submitApplication(application, 0, new ACOPlacementLogic(fogDevices, sensors, actuators, application, moduleMapping, locator));
+//            controller.submitApplication(application, 0, new ModulePlacementMobileEdgewards(fogDevices, sensors, actuators, application, moduleMapping));
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
 
             CloudSim.startSimulation();
@@ -154,31 +151,26 @@ public class ACO_Simulation {
      * @throws NumberFormatException
      */
     private static void createFogDevices(int userId, String appId) throws NumberFormatException, IOException {
-
-
         locator.parseResourceInfo();
-
         if (locator.getLevelWiseResources(locator.getLevelID("Cloud")).size() == 1) {
-
-            FogDevice cloud = createFogDevice("cloud", 44800, 40000, 100, 10000, 0.01, 16 * 103, 16 * 83.25); // creates the fog device Cloud at the apex of the hierarchy with level=0
+            // creates the fog device Cloud at the apex of the hierarchy with level=0
+            FogDevice cloud = createFogDevice("cloud", 44800, 40000, 100, 10000, 0.01, 16 * 103, 16 * 83.25);
             cloud.setParentId(References.NOT_SET);
             cloud.setLevel(0);
             locator.linkDataWithInstance(cloud.getId(), locator.getLevelWiseResources(locator.getLevelID("Cloud")).get(0));
             fogDevices.add(cloud);
 
             for (int i = 0; i < locator.getLevelWiseResources(locator.getLevelID("Proxy")).size(); i++) {
-
-                FogDevice proxy = createFogDevice("proxy-server_" + i, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333); // creates the fog device Proxy Server (level=1)
+                // creates the fog device Proxy Server (level=1)
+                FogDevice proxy = createFogDevice("proxy-server_" + i, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333);
                 locator.linkDataWithInstance(proxy.getId(), locator.getLevelWiseResources(locator.getLevelID("Proxy")).get(i));
                 proxy.setParentId(cloud.getId()); // setting Cloud as parent of the Proxy Server
                 proxy.setUplinkLatency(100); // latency of connection from Proxy Server to the Cloud is 100 ms
                 proxy.setLevel(1);
                 fogDevices.add(proxy);
-
             }
 
             for (int i = 0; i < locator.getLevelWiseResources(locator.getLevelID("Gateway")).size(); i++) {
-
                 FogDevice gateway = createFogDevice("gateway_" + i, 2800, 2000, 10000, 10000, 0.0, 107.339, 83.4333);
                 locator.linkDataWithInstance(gateway.getId(), locator.getLevelWiseResources(locator.getLevelID("Gateway")).get(i));
                 gateway.setParentId(locator.determineParent(gateway.getId(), References.SETUP_TIME));
@@ -186,9 +178,7 @@ public class ACO_Simulation {
                 gateway.setLevel(2);
                 fogDevices.add(gateway);
             }
-
         }
-
     }
 
 
@@ -299,10 +289,25 @@ public class ACO_Simulation {
          * Adding modules (vertices) to the application model (directed graph)
          */
         application.addAppModule("clientModule", 10); // adding module Client to the application model
-        application.addAppModule("processingModule1", 100); // adding module Concentration Calculator to the application model
-        application.addAppModule("processingModule2", 3000); // adding module Concentration Calculator to the application model
-        application.addAppModule("processingModule3", 1000); // adding module Concentration Calculator to the application model
-        application.addAppModule("processingModule4", 200); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule1", 500); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule2", 600); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule3", 700); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule5", 600); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule6", 700); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule7", 600); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule8", 700); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule9", 600); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule10", 700); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule11", 600); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule12", 700); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule13", 600); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule14", 700); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule15", 600); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule16", 700); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule17", 600); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule18", 700); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule19", 600); // adding module Concentration Calculator to the application model
+        application.addAppModule("processingModule4", 800); // adding module Concentration Calculator to the application model
         application.addAppModule("storageModule", 10); // adding module Connector to the application model
 
         /*
@@ -313,9 +318,24 @@ public class ACO_Simulation {
         else
             application.addAppEdge("M-SENSOR", "clientModule", 3000, 500, "M-SENSOR", Tuple.UP, AppEdge.SENSOR);
         application.addAppEdge("clientModule", "processingModule1", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
-        application.addAppEdge("processingModule1", "processingModule2", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule1", "processingModule2", 3500, 500, "RAW_DATA", Tuple.DOWN, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
         application.addAppEdge("processingModule2", "processingModule3", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
-        application.addAppEdge("processingModule3", "processingModule4", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule3", "processingModule5", 3500, 500, "RAW_DATA", Tuple.DOWN, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule5", "processingModule6", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule6", "processingModule7", 3500, 500, "RAW_DATA", Tuple.DOWN, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule7", "processingModule8", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule8", "processingModule9", 3500, 500, "RAW_DATA", Tuple.DOWN, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule9", "processingModule10",3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule10","processingModule11", 3500, 500, "RAW_DATA", Tuple.DOWN, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule11","processingModule12", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule12","processingModule13", 3500, 500, "RAW_DATA", Tuple.DOWN, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule13","processingModule14", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule14","processingModule15", 3500, 500, "RAW_DATA", Tuple.DOWN, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule15","processingModule16", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule16","processingModule17", 3500, 500, "RAW_DATA", Tuple.DOWN, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule17","processingModule18", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule18","processingModule19", 3500, 500, "RAW_DATA", Tuple.DOWN, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
+        application.addAppEdge("processingModule19", "processingModule4", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding edge from Client to Concentration Calculator module carrying tuples of type _SENSOR
         application.addAppEdge("processingModule4", "storageModule", 1000, 1000, "PROCESSED_DATA", Tuple.UP, AppEdge.MODULE); // adding periodic edge (period=1000ms) from Concentration Calculator to Connector module carrying tuples of type PLAYER_GAME_STATE
         application.addAppEdge("processingModule4", "clientModule", 14, 500, "ACTION_COMMAND", Tuple.DOWN, AppEdge.MODULE);  // adding edge from Concentration Calculator to Client module carrying tuples of type CONCENTRATION
         application.addAppEdge("clientModule", "M-DISPLAY", 1000, 500, "ACTUATION_SIGNAL", Tuple.DOWN, AppEdge.ACTUATOR);  // adding edge from Client module to Display (actuator) carrying tuples of type SELF_STATE_UPDATE
@@ -324,11 +344,26 @@ public class ACO_Simulation {
          * Defining the input-output relationships (represented by selectivity) of the application modules.
          */
         application.addTupleMapping("clientModule", "M-SENSOR", "RAW_DATA", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
-        application.addTupleMapping("processingModule1", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0 tuples of type SELF_STATE_UPDATE are emitted by Client module per incoming tuple of type CONCENTRATION
-        application.addTupleMapping("processingModule2", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0 tuples of type SELF_STATE_UPDATE are emitted by Client module per incoming tuple of type CONCENTRATION
-        application.addTupleMapping("processingModule3", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0 tuples of type SELF_STATE_UPDATE are emitted by Client module per incoming tuple of type CONCENTRATION
-        application.addTupleMapping("processingModule4", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0 tuples of type SELF_STATE_UPDATE are emitted by Client module per incoming tuple of type CONCENTRATION
-        application.addTupleMapping("processingModule4", "RAW_DATA", "ACTION_COMMAND", new FractionalSelectivity(1.0)); // 1.0 tuples of type CONCENTRATION are emitted by Concentration Calculator module per incoming tuple of type _SENSOR
+        application.addTupleMapping("processingModule1",  "RAW_DATA", "RAW_DATA1", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule2",  "RAW_DATA1", "RAW_DATA2", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule3",  "RAW_DATA2", "RAW_DATA4", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule5",  "RAW_DATA4", "RAW_DATA5", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule6",  "RAW_DATA5", "RAW_DATA6", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule7",  "RAW_DATA6", "RAW_DATA7", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule8",  "RAW_DATA7", "RAW_DATA8", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule9",  "RAW_DATA8", "RAW_DATA9", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule10", "RAW_DATA9", "RAW_DATA10",new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule11", "RAW_DATA10","RAW_DATA11", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule12", "RAW_DATA11","RAW_DATA12", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule13", "RAW_DATA12","RAW_DATA13", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule14", "RAW_DATA13","RAW_DATA14", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule15", "RAW_DATA14","RAW_DATA15", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule16", "RAW_DATA15","RAW_DATA16", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule17", "RAW_DATA16","RAW_DATA17", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule18", "RAW_DATA17","RAW_DATA18", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule19", "RAW_DATA18", "RAW_DATA3", new FractionalSelectivity(1.0)); // 0.9 tuples of type _SENSOR are emitted by Client module per incoming tuple of type EEG
+        application.addTupleMapping("processingModule4", "RAW_DATA3", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0 tuples of type SELF_STATE_UPDATE are emitted by Client module per incoming tuple of type CONCENTRATION
+        application.addTupleMapping("processingModule4", "RAW_DATA3", "ACTION_COMMAND", new FractionalSelectivity(1.0)); // 1.0 tuples of type CONCENTRATION are emitted by Concentration Calculator module per incoming tuple of type _SENSOR
         application.addTupleMapping("clientModule", "ACTION_COMMAND", "ACTUATION_SIGNAL", new FractionalSelectivity(1.0)); // 1.0 tuples of type GLOBAL_STATE_UPDATE are emitted by Client module per incoming tuple of type GLOBAL_GAME_STATE
 
         /*
@@ -341,6 +376,21 @@ public class ACO_Simulation {
             add("processingModule1");
             add("processingModule2");
             add("processingModule3");
+            add("processingModule5");
+            add("processingModule6");
+            add("processingModule7");
+            add("processingModule8");
+            add("processingModule9");
+            add("processingModule10");
+            add("processingModule11");
+            add("processingModule12");
+            add("processingModule13");
+            add("processingModule14");
+            add("processingModule15");
+            add("processingModule16");
+            add("processingModule17");
+            add("processingModule18");
+            add("processingModule19");
             add("processingModule4");
             add("clientModule");
             add("M-DISPLAY");

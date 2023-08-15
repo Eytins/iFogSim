@@ -9,7 +9,9 @@ import org.fog.entities.Sensor;
 import org.fog.placement.LocationHandler;
 import org.fog.utils.FogDeviceUtils;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FinalACOEnvironment extends Environment {
     private List<FogDevice> fogDevices;
@@ -19,6 +21,8 @@ public class FinalACOEnvironment extends Environment {
     private LocationHandler locator;
     private final double[][] latencyMatrix;
     private FogDevice initialDevice;
+
+    private Map<String, List<FogDevice>> modulesAvailableDevices = new HashMap<>();
 
     /**
      * Creates an Environment for the Ants to traverse.
@@ -43,9 +47,13 @@ public class FinalACOEnvironment extends Environment {
         this.actuators = actuators;
         this.application = application;
         this.locator = locator;
-        latencyMatrix = FogDeviceUtils.createLatencyMatrixOfAllDevices(fogDevices);
+        latencyMatrix = FogDeviceUtils.createLatencyMatrixOfAllDevices(fogDevices, modulesAvailableDevices, application.getModules());
         initialDevice = FogDeviceUtils.getInitialFogDevice(fogDevices, application, locator);
         setPheromoneMatrix(createPheromoneMatrix());
+    }
+
+    public Map<String, List<FogDevice>> getModulesAvailableDevices() {
+        return modulesAvailableDevices;
     }
 
     @Override

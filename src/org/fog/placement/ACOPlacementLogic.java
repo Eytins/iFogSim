@@ -18,8 +18,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ACOPlacementLogic extends ModulePlacement {
+    private static Logger logger = Logger.getLogger(AntColony.class.getName());
+
     private List<Sensor> sensors;
 
     private List<Actuator> actuators;
@@ -41,7 +45,6 @@ public class ACOPlacementLogic extends ModulePlacement {
         this.locator = locator;
         this.sensors = sensors;
         this.actuators = actuators;
-        latencyMatrix = FogDeviceUtils.createLatencyMatrixOfAllDevices(fogDevices);
         mapModules();
     }
 
@@ -60,14 +63,21 @@ public class ACOPlacementLogic extends ModulePlacement {
                 locator);
         FinalACOProblemConfiguration configuration = new FinalACOProblemConfiguration(environment);
         AntColony<FogDevice, FinalACOEnvironment> colony = getAntColony(configuration);
-        AcoProblemSolver<FogDevice, FinalACOEnvironment> solver = new AcoProblemSolver<>();
+        FinalACOProblemSolver<FogDevice, FinalACOEnvironment> solver = new FinalACOProblemSolver<>();
         solver.initialize(environment, colony, configuration);
         solver.addDaemonActions(new FinalACOStartPheromoneMatrix<>(), new PerformEvaporation<>());
         solver.addDaemonActions(getPheromoneUpdatePolicy());
         solver.getAntColony().addAntPolicies(new FinalACONodeSelection());
+        long startTime = System.currentTimeMillis();
         solver.solveProblem();
+        long endTime = System.currentTimeMillis();
+        System.out.println("Time consumed by ACO in milliseconds:" + (endTime - startTime));
         FogDevice[] bestSolution = solver.getBestSolution();
         // Algorithm done, start placing
+        startPlacement(mobile, bestSolution);
+    }
+
+    private void startPlacement(FogDevice mobile, FogDevice[] bestSolution) {
         setModuleInstanceCountMap(getCurrentModuleInstanceNum(mobile, bestSolution, getApplication().getModuleNames()));
         setModulesOnDevice(mappedModules(bestSolution, mobile));
         Map<Integer, List<AppModule>> deviceToModuleMap = new HashMap<>();
@@ -80,6 +90,15 @@ public class ACOPlacementLogic extends ModulePlacement {
             deviceToModuleMap.put(bestSolution[i - 1].getId(), temp);
         }
         setDeviceToModuleMap(deviceToModuleMap);
+        Map<String, List<Integer>> moduleToDeviceMap = getModuleToDeviceMap(mobile, bestSolution);
+        setModuleToDeviceMap(moduleToDeviceMap);
+        createModuleInstanceOnDevice(getApplication().getModules().get(0), mobile);
+        for (int i = 1; i < getApplication().getModuleNames().size(); i++) {
+            createModuleInstanceOnDevice(getApplication().getModules().get(i), bestSolution[i - 1]);
+        }
+    }
+
+    private Map<String, List<Integer>> getModuleToDeviceMap(FogDevice mobile, FogDevice[] bestSolution) {
         Map<String, List<Integer>> moduleToDeviceMap = new HashMap<>();
         List<Integer> tempDeviceList = new ArrayList<>();
         tempDeviceList.add(mobile.getId());
@@ -89,11 +108,7 @@ public class ACOPlacementLogic extends ModulePlacement {
             tempDeviceList.add(bestSolution[i - 1].getId());
             moduleToDeviceMap.put(getApplication().getModuleNames().get(i), tempDeviceList);
         }
-        setModuleToDeviceMap(moduleToDeviceMap);
-        createModuleInstanceOnDevice(getApplication().getModules().get(0), mobile);
-        for (int i = 1; i < getApplication().getModuleNames().size(); i++) {
-            createModuleInstanceOnDevice(getApplication().getModules().get(i), bestSolution[i - 1]);
-        }
+        return moduleToDeviceMap;
     }
 
     private AntColony<FogDevice, FinalACOEnvironment> getAntColony(ConfigurationProvider configurationProvider) {

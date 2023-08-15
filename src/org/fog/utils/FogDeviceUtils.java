@@ -330,18 +330,33 @@ public class FogDeviceUtils {
      * @param fogDevices All fog devices
      * @return the matrix which the first index represents the id of sender, the second represents the receiver
      */
-    public static double[][] createLatencyMatrixOfAllDevices(List<FogDevice> fogDevices) {
+    public static double[][] createLatencyMatrixOfAllDevices(List<FogDevice> fogDevices, Map<String, List<FogDevice>> modulesAvailableDevices, List<AppModule> modules) {
         int maxFogDeviceID = getMaxFogDeviceID(fogDevices);
         Map<Integer, FogDevice> fogDeviceMap = fogDeviceListToMap(fogDevices);
         double[][] result = new double[maxFogDeviceID + 1][maxFogDeviceID + 1];
 
+        for (AppModule appModule : modules) {
+            modulesAvailableDevices.put(appModule.getName(), new ArrayList<>());
+        }
+
         for (int i = 0; i < result.length; i++) {
+            FogDevice fogDeviceI = fogDeviceMap.getOrDefault(i, null);
+            if (fogDeviceI == null) {
+                continue;
+            }
+            for (AppModule module : modules) {
+                if (fogDeviceI.getHost().getRam() > module.getRam()) {
+                    List<FogDevice> list = modulesAvailableDevices.get(module.getName());
+                    list.add(fogDeviceI);
+                    modulesAvailableDevices.put(module.getName(), list);
+                }
+            }
+
             for (int j = 0; j < result.length; j++) {
                 if (i == j) {
                     result[i][j] = Double.NaN;
                     continue;
                 }
-                FogDevice fogDeviceI = fogDeviceMap.getOrDefault(i, null);
                 FogDevice fogDeviceJ = fogDeviceMap.getOrDefault(j, null);
                 if (fogDeviceI == null || fogDeviceJ == null) {
                     result[i][j] = Double.NaN;
