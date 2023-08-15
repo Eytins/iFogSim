@@ -34,6 +34,7 @@ public class ModulePlacementMobileEdgewards extends ModulePlacement{
 
 	public ModulePlacementMobileEdgewards(List<FogDevice> fogDevices, List<Sensor> sensors, List<Actuator> actuators, 
 			Application application, ModuleMapping moduleMapping){
+		long startTime = System.currentTimeMillis();
 		this.setFogDevices(fogDevices);
 		this.setApplication(application);
 		this.setModuleMapping(moduleMapping);
@@ -56,6 +57,8 @@ public class ModulePlacementMobileEdgewards extends ModulePlacement{
 		mapModules();
 		setModuleInstanceCountMap(getCurrentModuleInstanceNum());
 		mappedModules();
+		long endTime = System.currentTimeMillis();
+		System.out.println("Time consumed by edge-ward in milliseconds:" + (endTime - startTime));
 	}
 	
 	@Override
@@ -183,6 +186,9 @@ public class ModulePlacementMobileEdgewards extends ModulePlacement{
 				changed=false;
 				Map<AppEdge, Double> rateMap = new HashMap<AppEdge, Double>(appEdgeToRate);
 				for(AppEdge edge : rateMap.keySet()){
+					if (edge == null) {
+						continue;
+					}
 					AppModule destModule = getApplication().getModuleByName(edge.getDestination());
 					if(destModule == null)continue;
 					Map<Pair<String, String>, SelectivityModel> map = destModule.getSelectivityMap();

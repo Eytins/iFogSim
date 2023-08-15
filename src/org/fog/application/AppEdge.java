@@ -59,7 +59,7 @@ public class AppEdge {
 		setTupleType(tupleType);
 		setDirection(direction);
 		setEdgeType(edgeType);
-		setPeriodic(false);
+		setPeriodic(true);
 	}
 	
 	public AppEdge(String source, String destination, double periodicity, double tupleCpuLength, 

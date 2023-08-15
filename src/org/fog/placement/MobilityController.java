@@ -1,10 +1,6 @@
 package org.fog.placement;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import isula.aco.AntColony;
@@ -152,6 +148,7 @@ public class MobilityController extends SimEntity{
 			printTimeDetails();
 			printPowerDetails();
 			printCostDetails();
+
 			printNetworkUsageDetails();
 			printMigrationDelayDetails();
 			System.exit(0);
@@ -291,11 +288,14 @@ public class MobilityController extends SimEntity{
 	private void printCostDetails(){
 		System.out.println("Cost of execution in cloud = "+getCloud().getTotalCost());
 	}
-	
+
 	private void printPowerDetails() {
+		double totalConsume = 0;
 		for(FogDevice fogDevice : getFogDevices()){
 			System.out.println(fogDevice.getName() + " : Energy Consumed = "+fogDevice.getEnergyConsumption());
+			totalConsume += fogDevice.getEnergyConsumption() / 1000;
 		}
+		System.out.println("Total energy consumed: " + totalConsume);
 	}
 
 	/*
